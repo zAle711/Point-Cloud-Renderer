@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
+using System;
 using System.Globalization;
 using System.Linq;
 using TMPro;
@@ -18,6 +19,7 @@ public class World : MonoBehaviour
 	public Material chunkMaterial;
 
 	private int CHUNKSIZE;
+	private int CHUNKDATALENGTH;
 	private int BlocksAtTime;
 	private bool InvertYZ;
 	private bool Centimeters;
@@ -28,9 +30,11 @@ public class World : MonoBehaviour
 	private HashSet<string> chunksToUpdate;
 	public Dictionary<string, Chunk> chunks;
 
-
+	//private HashSet<(string chunkName, Vector3Int position, int[] chunkData)> gameObjectsToAdd;
+	private Dictionary<string, (Vector3Int, int[])> gameObjectsToAdd;
 
 	private bool coroutineStarted = false;
+	private bool coroutineStartedGameObjects = false;
 
 	private TextMeshProUGUI textLabel;
 
@@ -40,12 +44,11 @@ public class World : MonoBehaviour
 	private string currentKey = null;
 	private Chunk currentChunk = null;
 
-	private List<string> chunksAroundPlayer;
-	private List<string> lastChunks;
 	
 	void Start()
 	{
 		CHUNKSIZE = VoxelConfiguration.Configuration().ChunkSize;
+		CHUNKDATALENGTH = CHUNKSIZE * CHUNKSIZE * CHUNKSIZE;
 		InvertYZ = VoxelConfiguration.Configuration().InvertYZ;
 		BlocksAtTime = VoxelConfiguration.Configuration().BlocksAtTime;
 		Centimeters = VoxelConfiguration.Configuration().Centimeters;
@@ -53,8 +56,8 @@ public class World : MonoBehaviour
 		blocksList = new List<Vector3>();
 		chunksToUpdate = new HashSet<string>();
 		chunks = new Dictionary<string, Chunk>();
-		chunksAroundPlayer = new List<string>();
-		lastChunks = new List<string>();
+		gameObjectsToAdd = new Dictionary<string, (Vector3Int, int[])>();
+
 
 		LookUpTableDM = ChunkHelper.FillTableDM();
 		//LookUpTable5CM = ChunkHelper.FillTable5CM();
@@ -77,7 +80,6 @@ public class World : MonoBehaviour
                 currentChunk = chunks[currentKey];
             }
 
-			Debug.Log(currentKey);
 
             if (!currentChunk.started)
             {
@@ -87,6 +89,7 @@ public class World : MonoBehaviour
             if (currentChunk.done)
             {
                 float start = Time.realtimeSinceStartup;
+				Debug.Log("greedy Partito!");
                 currentChunk.Render();
                 float end = Time.realtimeSinceStartup;
 				//Debug.Log(currentKey + " " + (end - start));
@@ -102,6 +105,8 @@ public class World : MonoBehaviour
 			yield return null;
 
 		}
+
+		coroutineStarted = false;
 	}
 
     void AddBlocksToList()
@@ -114,24 +119,28 @@ public class World : MonoBehaviour
     void AddBlockToWorld()
 	{
 		float start = Time.realtimeSinceStartup;
+		List<Vector3> blocksToRemove = new List<Vector3>();
+
         if (blocksList.Count >= BlocksAtTime)
         {
             for (int i = 0; i < BlocksAtTime; i++)
             {
                 Vector3 point_position = blocksList[i];
-                AddBlock(point_position);
+
+				AddBlock(point_position);
+
             }
 
             blocksList.RemoveRange(0, BlocksAtTime);
         }
 
-		//Debug.Log(string.Format("Tempo impiegato ad inserire {0} punti uguale a {1}", BlocksAtTime, Time.realtimeSinceStartup - start));
+        //Debug.Log(string.Format("Tempo impiegato ad inserire {0} punti uguale a {1}", BlocksAtTime, Time.realtimeSinceStartup - start));
     }
 
 
 	private string GetTextInfo()
     {
-		return string.Format("Chunks creati {0},HashSet {1}, blocchi da aggiungere {2}", chunks.Count, chunksToUpdate.Count ,blocksList.Count);
+		return string.Format("Chunks creati {0}\nChunk da renderizzare {1}\nGameObject da aggiungere {2}\nFPS {3}", chunks.Count, chunksToUpdate.Count ,gameObjectsToAdd.Count, (int) (1.0f / Time.deltaTime));
     }
 
 	void Update()
@@ -146,6 +155,13 @@ public class World : MonoBehaviour
             coroutineStarted = true;
             StartCoroutine(RenderWorldAsync());
         }
+
+		if (!coroutineStartedGameObjects && gameObjectsToAdd.Count != 0)
+        {
+			coroutineStartedGameObjects = true;
+			StartCoroutine(AddGameObjectsChunkToWorld());
+
+		}
 
         textLabel.text = GetTextInfo();
 
@@ -170,9 +186,33 @@ public class World : MonoBehaviour
 
 			AddBlock(point_position);
 		}
-		BlocksAtTime = blocksList.Count;
+		//BlocksAtTime = blocksList.Count;
 		//Debug.Log(blocksList.Count);
 	}
+
+	private IEnumerator AddGameObjectsChunkToWorld()
+    {
+		while (gameObjectsToAdd.Count > 0)
+        {
+			string chunkName = gameObjectsToAdd.Keys.First();
+			var pair = gameObjectsToAdd[chunkName];
+
+			//var pair = gameObjectsToAdd.First();
+			GameObject newChunk = Instantiate(chunkPrefab, transform);
+			newChunk.name = chunkName;
+			Chunk c = newChunk.GetComponent<Chunk>();
+			c.SetPosition(pair.Item1);
+			c.SetChunkName(chunkName);
+			c.chunkData = pair.Item2;
+
+			chunks.Add(chunkName, c);
+			chunksToUpdate.Add(chunkName);
+			gameObjectsToAdd.Remove(chunkName);
+			yield return new WaitForSeconds(0.02f);
+        }
+
+		coroutineStartedGameObjects = false;
+    }
 
 	private void AddBlock(Vector3 point_position)
     {
@@ -182,21 +222,34 @@ public class World : MonoBehaviour
 
 		string chunkName = string.Format("{0}_{1}_{2}", chunk_and_index[0], chunk_and_index[1], chunk_and_index[2]);
 
-		Chunk c;
+		int[] chunkData;
 		if (chunks.ContainsKey(chunkName))
         {
-			c = chunks[chunkName];
+			chunkData = chunks[chunkName].chunkData;
 		}
         else
         {
 			Vector3Int chunkPosition = new Vector3Int(chunk_and_index[0], chunk_and_index[1], chunk_and_index[2]);
-			GameObject newChunk = Instantiate(chunkPrefab, transform);
-			newChunk.name = chunkName;
-			c = newChunk.GetComponent<Chunk>();
-			c.SetPosition(chunkPosition);
-			c.SetChunkName(chunkName);
 
-			chunks.Add(chunkName, c);
+			if (gameObjectsToAdd.Keys.Contains(chunkName))
+            {
+
+				chunkData = gameObjectsToAdd[chunkName].Item2;
+
+			} else
+            {
+				gameObjectsToAdd.Add(chunkName, (chunkPosition, new int[CHUNKDATALENGTH]));
+
+				chunkData = gameObjectsToAdd[chunkName].Item2;
+			}
+			
+			//GameObject newChunk = Instantiate(chunkPrefab, transform);
+			//newChunk.name = chunkName;
+			//c = newChunk.GetComponent<Chunk>();
+			//c.SetPosition(chunkPosition);
+			//c.SetChunkName(chunkName);
+
+			//chunks.Add(chunkName, c);
 
 			//newBlockPerChunk.Add(chunkName, 0);
 		}
@@ -204,7 +257,7 @@ public class World : MonoBehaviour
         if (Centimeters)
         {
             int index = chunk_and_index[3] + chunk_and_index[4] * CHUNKSIZE + chunk_and_index[5] * CHUNKSIZE * CHUNKSIZE;
-            FillChunkData(c, index);
+            FillChunkData(chunkData, index);
         }
         else
         {
@@ -214,10 +267,10 @@ public class World : MonoBehaviour
 
             string key = string.Format("{0}-{1}-{2}", x, y, z);
             int[] index = LookUpTableDM[key];
-            FillChunkData(c, index);
+            FillChunkData(chunkData, index);
         }
 
-		chunksToUpdate.Add(c.chunkName);
+		//chunksToUpdate.Add(chunkName);
 
         //     if (newBlockPerChunk.ContainsKey(c.chunkName) && newBlockPerChunk[c.chunkName] >= CHUNKSIZE * CHUNKSIZE * CHUNKSIZE * 0.02f)
         //     {
@@ -227,23 +280,23 @@ public class World : MonoBehaviour
 
     }
 
-    private void FillChunkData(Chunk c, int index)
+    private void FillChunkData(int[] chunkData, int index)
     {
-		if (c.chunkData[index] == 0)
+		if (chunkData[index] == 0)
 		{
-			c.chunkData[index] = 1;
+			chunkData[index] = 1;
 
             //newBlockPerChunk[c.chunkName] = newBlockPerChunk.ContainsKey(c.chunkName) ? newBlockPerChunk[c.chunkName] + 1 : 1;
 		}
     }
 
-	private void FillChunkData(Chunk c, int[] index)
+	private void FillChunkData(int[] chunkData, int[] index)
     {
-		if (c.chunkData[index[0]] == 0)
+		if (chunkData[index[0]] == 0)
         {
 			foreach (int i in index)
             {
-				c.chunkData[i] = 1;
+				chunkData[i] = 1;
             }
 
             //newBlockPerChunk[c.chunkName] = newBlockPerChunk.ContainsKey(c.chunkName) ? newBlockPerChunk[c.chunkName] + index.Length : index.Length;

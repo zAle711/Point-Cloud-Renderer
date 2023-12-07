@@ -29,7 +29,7 @@ public class Chunk : MonoBehaviour
 	void Awake()
     {
 		chunkSize = VoxelConfiguration.Configuration().ChunkSize;
-		chunkData = new int[chunkSize * chunkSize * chunkSize];
+		//chunkData = new int[chunkSize * chunkSize * chunkSize];
 		LOD0 = transform.Find("LOD0").gameObject;
 		LOD1 = transform.Find("LOD1").gameObject;
 
