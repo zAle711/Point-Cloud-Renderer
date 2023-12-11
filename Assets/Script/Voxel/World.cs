@@ -39,7 +39,6 @@ public class World : MonoBehaviour
 	private TextMeshProUGUI textLabel;
 
 	private Dictionary<string, int[]> LookUpTableDM;
-	//private Dictionary<string, int[]> LookUpTable5CM;
 
 	private string currentKey = null;
 	private Chunk currentChunk = null;
@@ -89,7 +88,6 @@ public class World : MonoBehaviour
             if (currentChunk.done)
             {
                 float start = Time.realtimeSinceStartup;
-				Debug.Log("greedy Partito!");
                 currentChunk.Render();
                 float end = Time.realtimeSinceStartup;
 				//Debug.Log(currentKey + " " + (end - start));
