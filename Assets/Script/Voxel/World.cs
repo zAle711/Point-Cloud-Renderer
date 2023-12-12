@@ -26,7 +26,7 @@ public class World : MonoBehaviour
 
 	//Datastractures to handle voxels
 	private List<Vector3> blocksList;
-	//private HashSet<string> chunksToUpdate;
+	//private HashSet<string> 5555555555555555555555555555555555555555555555555;
 	private HashSet<string> chunksToUpdate;
 	public Dictionary<string, Chunk> chunks;
 
@@ -59,7 +59,6 @@ public class World : MonoBehaviour
 
 
 		LookUpTableDM = ChunkHelper.FillTableDM();
-		//LookUpTable5CM = ChunkHelper.FillTable5CM();
 
 		textLabel = GameObject.FindWithTag("Info").GetComponent<TextMeshProUGUI>();
 
@@ -87,10 +86,9 @@ public class World : MonoBehaviour
 
             if (currentChunk.done)
             {
-                float start = Time.realtimeSinceStartup;
+
                 currentChunk.Render();
-                float end = Time.realtimeSinceStartup;
-				//Debug.Log(currentKey + " " + (end - start));
+
 				chunksToUpdate.Remove(currentKey);
 
                 currentChunk.done = false;
@@ -116,8 +114,6 @@ public class World : MonoBehaviour
 
     void AddBlockToWorld()
 	{
-		float start = Time.realtimeSinceStartup;
-		List<Vector3> blocksToRemove = new List<Vector3>();
 
         if (blocksList.Count >= BlocksAtTime)
         {
@@ -132,7 +128,6 @@ public class World : MonoBehaviour
             blocksList.RemoveRange(0, BlocksAtTime);
         }
 
-        //Debug.Log(string.Format("Tempo impiegato ad inserire {0} punti uguale a {1}", BlocksAtTime, Time.realtimeSinceStartup - start));
     }
 
 
@@ -143,6 +138,7 @@ public class World : MonoBehaviour
 
 	void Update()
 	{
+		float start = Time.realtimeSinceStartup;
 
 		if (pointCloudSubscriber.newMessage) AddBlocksToList();
 
@@ -161,8 +157,10 @@ public class World : MonoBehaviour
 
 		}
 
-        textLabel.text = GetTextInfo();
+		//textLabel.text = GetTextInfo();
+		float elapsed_time = Time.realtimeSinceStartup - start;
 
+		if (elapsed_time > 1.0f) Debug.Log(elapsed_time);
 	}
 
 	void ReadCloudFromFile()
@@ -184,8 +182,6 @@ public class World : MonoBehaviour
 
 			AddBlock(point_position);
 		}
-		//BlocksAtTime = blocksList.Count;
-		//Debug.Log(blocksList.Count);
 	}
 
 	private IEnumerator AddGameObjectsChunkToWorld()
@@ -240,16 +236,6 @@ public class World : MonoBehaviour
 
 				chunkData = gameObjectsToAdd[chunkName].Item2;
 			}
-			
-			//GameObject newChunk = Instantiate(chunkPrefab, transform);
-			//newChunk.name = chunkName;
-			//c = newChunk.GetComponent<Chunk>();
-			//c.SetPosition(chunkPosition);
-			//c.SetChunkName(chunkName);
-
-			//chunks.Add(chunkName, c);
-
-			//newBlockPerChunk.Add(chunkName, 0);
 		}
 
         if (Centimeters)
@@ -267,14 +253,6 @@ public class World : MonoBehaviour
             int[] index = LookUpTableDM[key];
             FillChunkData(chunkData, index);
         }
-
-		//chunksToUpdate.Add(chunkName);
-
-        //     if (newBlockPerChunk.ContainsKey(c.chunkName) && newBlockPerChunk[c.chunkName] >= CHUNKSIZE * CHUNKSIZE * CHUNKSIZE * 0.02f)
-        //     {
-        //         chunksToUpdate.Add(c.chunkName);
-        //         newBlockPerChunk.Remove(c.chunkName);
-        //     }
 
     }
 

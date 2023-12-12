@@ -73,5 +73,9 @@ crashlytics-build.properties
 
 /[Aa]ssets/Hull-Delaunay-Voronoi-master
 
-/Assets/TextMesh Pro/*
-/Assets/Point Clouds Txt/*
+/[Aa]ssets/TextMesh Pro/*
+/[Aa]ssets/Point Clouds Txt/*
+/[Aa]ssets/Oculus/*
+/[Aa]ssets/Plugins/*
+/[Aa]ssets/XR/*
+/[Aa]ssets/Samples/*
