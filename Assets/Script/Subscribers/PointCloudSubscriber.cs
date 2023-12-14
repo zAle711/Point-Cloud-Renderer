@@ -1,10 +1,7 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 using Unity.Robotics.ROSTCPConnector;
 using PoseArrayMsg = RosMessageTypes.Geometry.PoseArrayMsg;
-using PoseMsg = RosMessageTypes.Geometry.PoseMsg;
 
 public class PointCloudSubscriber : MonoBehaviour
 {
@@ -28,21 +25,18 @@ public class PointCloudSubscriber : MonoBehaviour
         newMessage = true;
     }
 
-    public List<Vector3> GetPointsFromMessage()
+    public Vector3[] GetPointsFromMessage()
     {
-        List<Vector3> newBlocks = new List<Vector3>();
-        foreach(PoseMsg point in lastMessage.poses)
+        Vector3[] newBlocks = new Vector3[lastMessage.poses.Length];
+
+       for(int i = 0; i < newBlocks.Length; i++)
         {
-            Vector3 block = new Vector3((float) point.position.x, (float) point.position.z, (float) point.position.y);
-            newBlocks.Add(block);
+            newBlocks[i] = new Vector3((float)lastMessage.poses[i].position.x, (float)lastMessage.poses[i].position.z, (float)lastMessage.poses[i].position.y);
         }
+
         newMessage = false;
+        lastMessage = null;
         return newBlocks;
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
 }

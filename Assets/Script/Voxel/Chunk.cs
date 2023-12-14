@@ -1,9 +1,6 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Threading.Tasks;
-using System;
-
 
 public class Chunk : MonoBehaviour
 {
@@ -12,7 +9,6 @@ public class Chunk : MonoBehaviour
 	private GameObject LOD0;
 	private GameObject LOD1;
 
-	//public GameObject chunk;
 	public string chunkName;
     public int newBlocks = 0;
 
@@ -22,14 +18,9 @@ public class Chunk : MonoBehaviour
 	private Vector3[] vertices;
 	private int[] triangles;
 
-
-
-	// Use this for initialization
-
 	void Awake()
     {
 		chunkSize = VoxelConfiguration.Configuration().ChunkSize;
-		//chunkData = new int[chunkSize * chunkSize * chunkSize];
 		LOD0 = transform.Find("LOD0").gameObject;
 		LOD1 = transform.Find("LOD1").gameObject;
 
@@ -39,14 +30,23 @@ public class Chunk : MonoBehaviour
 
 	public void SetPosition(Vector3Int position)
     {
-		float positionOffset = 100.0f / VoxelConfiguration.Configuration().ChunkSize;
-		Vector3 chunkPosition = new Vector3( (float) position.x / positionOffset, (float) position.y / positionOffset, (float) position.z / positionOffset);	
+		float positionOffset = 100.0f / chunkSize;
+		Vector3 chunkPosition = new Vector3( position.x / positionOffset,position.y / positionOffset, position.z / positionOffset);	
 		transform.position = chunkPosition;
     }
 	
 	public void SetChunkName(string chunkName)
     {
 		this.chunkName = chunkName;
+    }
+
+	public void SetChunkData(List<int> data)
+    {
+		chunkData = new int[chunkSize * chunkSize * chunkSize];
+		foreach(int point in data)
+        {
+			chunkData[point] = 1;
+        }
     }
 
     private void GreedyChunk()

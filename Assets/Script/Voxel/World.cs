@@ -6,6 +6,7 @@ using System;
 using System.Globalization;
 using System.Linq;
 using TMPro;
+using System.Text;
 
 //using Unity.Robotics.ROSTCPConnector;
 //using PoseArrayMsg = RosMessageTypes.Geometry.PoseArrayMsg;
@@ -23,6 +24,7 @@ public class World : MonoBehaviour
 	private int BlocksAtTime;
 	private bool InvertYZ;
 	private bool Centimeters;
+	private bool readingFromRos;
 
 	//Datastractures to handle voxels
 	private List<Vector3> blocksList;
@@ -31,7 +33,7 @@ public class World : MonoBehaviour
 	public Dictionary<string, Chunk> chunks;
 
 	//private HashSet<(string chunkName, Vector3Int position, int[] chunkData)> gameObjectsToAdd;
-	private Dictionary<string, (Vector3Int, int[])> gameObjectsToAdd;
+	private Dictionary<string, (Vector3Int, List<int>)> gameObjectsToAdd;
 
 	private bool coroutineStarted = false;
 	private bool coroutineStartedGameObjects = false;
@@ -51,16 +53,18 @@ public class World : MonoBehaviour
 		InvertYZ = VoxelConfiguration.Configuration().InvertYZ;
 		BlocksAtTime = VoxelConfiguration.Configuration().BlocksAtTime;
 		Centimeters = VoxelConfiguration.Configuration().Centimeters;
+		readingFromRos = VoxelConfiguration.Configuration().TopicName != "";
 
 		blocksList = new List<Vector3>();
 		chunksToUpdate = new HashSet<string>();
 		chunks = new Dictionary<string, Chunk>();
-		gameObjectsToAdd = new Dictionary<string, (Vector3Int, int[])>();
+		gameObjectsToAdd = new Dictionary<string, (Vector3Int position, List<int> indexs)>();
 
+		ChunkHelper.IntToString();
 
 		LookUpTableDM = ChunkHelper.FillTableDM();
 
-		textLabel = GameObject.FindWithTag("Info").GetComponent<TextMeshProUGUI>();
+		//textLabel = GameObject.FindWithTag("Info").GetComponent<TextMeshProUGUI>();
 
         if (VoxelConfiguration.Configuration().FileName != "") ReadCloudFromFile();
 
@@ -103,12 +107,12 @@ public class World : MonoBehaviour
 		}
 
 		coroutineStarted = false;
+		Debug.Log("Rendering Coroutine Finita!");
 	}
 
     void AddBlocksToList()
     {
-		List<Vector3> newPoints = pointCloudSubscriber.GetPointsFromMessage();
-		blocksList.AddRange(newPoints);
+		blocksList.AddRange(pointCloudSubscriber.GetPointsFromMessage());
 
 	}
 
@@ -119,9 +123,7 @@ public class World : MonoBehaviour
         {
             for (int i = 0; i < BlocksAtTime; i++)
             {
-                Vector3 point_position = blocksList[i];
-
-				AddBlock(point_position);
+				AddBlock(blocksList[i]);
 
             }
 
@@ -146,21 +148,20 @@ public class World : MonoBehaviour
 
         if (!coroutineStarted && chunksToUpdate.Count != 0)
         {
-            coroutineStarted = true;
+			Debug.Log("Coroutine Per Rendering partita");
+			coroutineStarted = true;
             StartCoroutine(RenderWorldAsync());
         }
 
 		if (!coroutineStartedGameObjects && gameObjectsToAdd.Count != 0)
         {
+			Debug.Log("Coroutine Per gameObject partita");
 			coroutineStartedGameObjects = true;
 			StartCoroutine(AddGameObjectsChunkToWorld());
 
 		}
 
 		//textLabel.text = GetTextInfo();
-		float elapsed_time = Time.realtimeSinceStartup - start;
-
-		if (elapsed_time > 1.0f) Debug.Log(elapsed_time);
 	}
 
 	void ReadCloudFromFile()
@@ -189,20 +190,19 @@ public class World : MonoBehaviour
 		while (gameObjectsToAdd.Count > 0)
         {
 			string chunkName = gameObjectsToAdd.Keys.First();
-			var pair = gameObjectsToAdd[chunkName];
+			var (position, indexs) = gameObjectsToAdd[chunkName];
 
-			//var pair = gameObjectsToAdd.First();
 			GameObject newChunk = Instantiate(chunkPrefab, transform);
 			newChunk.name = chunkName;
 			Chunk c = newChunk.GetComponent<Chunk>();
-			c.SetPosition(pair.Item1);
+			c.SetPosition(position);
 			c.SetChunkName(chunkName);
-			c.chunkData = pair.Item2;
+			c.SetChunkData(indexs);
 
 			chunks.Add(chunkName, c);
 			chunksToUpdate.Add(chunkName);
 			gameObjectsToAdd.Remove(chunkName);
-			yield return new WaitForSeconds(0.02f);
+			yield return new WaitForSeconds(0.03f);
         }
 
 		coroutineStartedGameObjects = false;
@@ -210,48 +210,80 @@ public class World : MonoBehaviour
 
 	private void AddBlock(Vector3 point_position)
     {
-		//int[] chunk_and_index = ChunkHelper.GetChunkAndIndexFromPosition(point_position);
-		bool reading_from_ros = VoxelConfiguration.Configuration().TopicName != "";
-		int[] chunk_and_index = reading_from_ros ? ChunkHelper.GetChunkAndIndexFromRosPoint(point_position) : ChunkHelper.GetChunkAndIndexFromPosition(point_position);
+		int chunk_x, chunk_y, chunk_z;
+		int x, y, z;
+		string chunkName;
+		StringBuilder sb = new StringBuilder();
+		if (readingFromRos)
+		{
+			chunk_x = (int)point_position.x;
+			chunk_y = (int)point_position.y;
+			chunk_z = (int)point_position.z;
 
-		string chunkName = string.Format("{0}_{1}_{2}", chunk_and_index[0], chunk_and_index[1], chunk_and_index[2]);
+			chunkName = sb.AppendFormat("{0}_{1}_{2}", ChunkHelper.IntToStringTable[chunk_x], ChunkHelper.IntToStringTable[chunk_y], ChunkHelper.IntToStringTable[chunk_z]).ToString();
 
-		int[] chunkData;
+			x = (int)(Math.Abs(point_position.x) * 100) % 100;
+			y = (int)(Math.Abs(point_position.y) * 100) % 100;
+			z = (int)(Math.Abs(point_position.z) * 100) % 100;
+		} else
+        {
+			int[] chunk_and_index = ChunkHelper.GetChunkAndIndexFromPosition(point_position, CHUNKSIZE);
+			chunk_x = chunk_and_index[0];
+			chunk_y = chunk_and_index[1];
+			chunk_z = chunk_and_index[2];
+
+			chunkName = sb.AppendFormat("{0}_{1}_{2}", ChunkHelper.IntToStringTable[chunk_x], ChunkHelper.IntToStringTable[chunk_y], ChunkHelper.IntToStringTable[chunk_z]).ToString();
+
+			x = chunk_and_index[3];
+			y = chunk_and_index[4];
+			z = chunk_and_index[5];
+		}
+
+		int[] chunkData = null;
+		List<int> chunkDataList = null;
 		if (chunks.ContainsKey(chunkName))
         {
 			chunkData = chunks[chunkName].chunkData;
 		}
         else
         {
-			Vector3Int chunkPosition = new Vector3Int(chunk_and_index[0], chunk_and_index[1], chunk_and_index[2]);
 
-			if (gameObjectsToAdd.Keys.Contains(chunkName))
+            if (gameObjectsToAdd.Keys.Contains(chunkName))
             {
 
-				chunkData = gameObjectsToAdd[chunkName].Item2;
+                chunkDataList = gameObjectsToAdd[chunkName].Item2;
 
-			} else
+            }
+            else
             {
-				gameObjectsToAdd.Add(chunkName, (chunkPosition, new int[CHUNKDATALENGTH]));
-
-				chunkData = gameObjectsToAdd[chunkName].Item2;
+				Vector3Int chunkPosition = new Vector3Int(chunk_x, chunk_y, chunk_z);
+				gameObjectsToAdd.Add(chunkName, (chunkPosition, new List<int>()));
+				chunkDataList = gameObjectsToAdd[chunkName].Item2;
 			}
-		}
+        }
 
         if (Centimeters)
         {
-            int index = chunk_and_index[3] + chunk_and_index[4] * CHUNKSIZE + chunk_and_index[5] * CHUNKSIZE * CHUNKSIZE;
-            FillChunkData(chunkData, index);
+            int index =x + y * CHUNKSIZE + z * CHUNKSIZE * CHUNKSIZE;
+			if (chunkData != null)
+				FillChunkData(chunkData, index);
+			else
+				chunkDataList.Add(index);
         }
         else
         {
-            int x = chunk_and_index[3] / 10;
-            int y = chunk_and_index[4] / 10;
-            int z = chunk_and_index[5] / 10;
+			x /= 10;
+			y /= 10;
+			z /= 10;
 
-            string key = string.Format("{0}-{1}-{2}", x, y, z);
+			sb.Clear();
+			string key = sb.AppendFormat("{0}-{1}-{2}", x, y, z).ToString();
             int[] index = LookUpTableDM[key];
-            FillChunkData(chunkData, index);
+
+			if (chunkData != null)
+				FillChunkData(chunkData, index);
+			else
+				chunkDataList.AddRange(index);
         }
 
     }
@@ -261,8 +293,6 @@ public class World : MonoBehaviour
 		if (chunkData[index] == 0)
 		{
 			chunkData[index] = 1;
-
-            //newBlockPerChunk[c.chunkName] = newBlockPerChunk.ContainsKey(c.chunkName) ? newBlockPerChunk[c.chunkName] + 1 : 1;
 		}
     }
 
@@ -275,7 +305,6 @@ public class World : MonoBehaviour
 				chunkData[i] = 1;
             }
 
-            //newBlockPerChunk[c.chunkName] = newBlockPerChunk.ContainsKey(c.chunkName) ? newBlockPerChunk[c.chunkName] + index.Length : index.Length;
         }
     }
 

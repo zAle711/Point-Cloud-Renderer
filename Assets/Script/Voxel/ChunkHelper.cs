@@ -4,11 +4,10 @@ using System.Collections.Generic;
 using System;
 public static class ChunkHelper
 {
-
+	public static Dictionary<int, string> IntToStringTable;
 	public static string GetChunkFromPosition(Vector3 position)
     {
-		int[] chunk = GetChunkAndIndexFromPosition(position);
-		return string.Format("{0}_{1}_{2}", chunk[0], chunk[1], chunk[2]);
+		return "" + IntToStringTable[(int)position.x] + "_" + IntToStringTable[(int)position.y] + "_" + IntToStringTable[(int)position.z];
     }
 
 	public static int[] GetChunkAndIndexFromRosPoint(Vector3 position)
@@ -17,15 +16,15 @@ public static class ChunkHelper
 		int chunk_y = (int)position.y;
 		int chunk_z = (int)position.z;
 
-		int x = Int32.Parse(position.x.ToString(".00").Split(",")[1]);
-		int y = Int32.Parse(position.y.ToString(".00").Split(",")[1]);
-		int z = Int32.Parse(position.z.ToString(".00").Split(",")[1]);
+		int x = (int)(Math.Abs(position.x) * 100) % 100;
+		int y = (int)(Math.Abs(position.y) * 100) % 100;
+		int z = (int)(Math.Abs(position.z) * 100) % 100;
 
 		int[] chunk_index = { chunk_x, chunk_y, chunk_z, x, y, z };
 		return chunk_index;
 	}
 
-	public static int[] GetChunkAndIndexFromPosition(Vector3 position)
+	public static int[] GetChunkAndIndexFromPosition(Vector3 position, int CHUNKSIZE)
     {
 		int chunk_x = (int)position.x;
 		int chunk_y = (int)position.y;
@@ -34,8 +33,6 @@ public static class ChunkHelper
 		int pos_x = (int)(Mathf.Abs(position.x) * 100 - Mathf.Floor(Mathf.Abs(position.x)) * 100);
 		int pos_y = (int)(Mathf.Abs(position.y) * 100 - Mathf.Floor(Mathf.Abs(position.y)) * 100);
 		int pos_z = (int)(Mathf.Abs(position.z) * 100 - Mathf.Floor(Mathf.Abs(position.z)) * 100);
-
-		int CHUNKSIZE = VoxelConfiguration.Configuration().ChunkSize;
 		int chunkMultiplier = 100 / CHUNKSIZE;
 
 		chunk_x = position.x >= 0 ? chunk_x * chunkMultiplier + pos_x / CHUNKSIZE : chunk_x * chunkMultiplier - (pos_x / CHUNKSIZE) - 1;
@@ -58,7 +55,6 @@ public static class ChunkHelper
 	public static Vector3Int GetBlockIndex(int x, int y, int z, int ChunkSize)
 	{
 		int ix, iy, iz;
-		//int ChunkSize = VoxelConfiguration.Configuration().ChunkSize;
 
 		ix = (x < 0) ? x & ChunkSize - 1: x % ChunkSize;
 		iy = (y < 0) ? y & ChunkSize - 1: y % ChunkSize;
@@ -69,13 +65,12 @@ public static class ChunkHelper
 
 	public static int GetIndex(int x, int y, int z, int ChunkSize)
 	{
-		//int ChunkSize = VoxelConfiguration.Configuration().ChunkSize;
-
 		if ( x < 0 || y < 0 || z < 0)
         {
-			Vector3Int blockIndex = GetBlockIndex(x, y, z, ChunkSize);
-			
-			return blockIndex.x + ChunkSize * blockIndex.y + ChunkSize * ChunkSize * blockIndex.z;
+			x = (x < 0) ? x & ChunkSize - 1 : x % ChunkSize;
+			y = (y < 0) ? y & ChunkSize - 1 : y % ChunkSize;
+			z = (z < 0) ? z & ChunkSize - 1 : z % ChunkSize;
+
 		}
 		
 		return x + ChunkSize * y + ChunkSize * ChunkSize * z;
@@ -154,7 +149,7 @@ public static class ChunkHelper
 
 		for(int i = 0; i < cube_vertices.Length; i++)
         {
-			cube_vertices[i] *= (chunkSize / 100.0f);
+			cube_vertices[i] *= chunkSize / 100.0f;
 		}
 
 		Mesh mesh = new Mesh();
@@ -168,4 +163,16 @@ public static class ChunkHelper
 		return mesh;
     }
 
+
+	public static void IntToString()
+    {
+		Dictionary<int, string> IntToStringTemp = new Dictionary<int, string>();
+
+		for (int i = -100;  i <= 100; i++)
+        {
+			IntToStringTemp.Add(i, i.ToString());
+        }
+
+		IntToStringTable = IntToStringTemp;
+    }
 }

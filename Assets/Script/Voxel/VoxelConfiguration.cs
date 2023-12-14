@@ -1,8 +1,5 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using System.IO;
-using System.Linq;
+
 
 [CreateAssetMenu(menuName = "VoxelsSetting")]
 public class VoxelConfiguration : ScriptableObject
@@ -18,7 +15,6 @@ public class VoxelConfiguration : ScriptableObject
     {
         if (instance == null)
         {
-            //instance = ScriptableObject.CreateInstance<VoxelConfiguration>();
             instance = Resources.Load<VoxelConfiguration>("Config/VoxelConfig");
         }
         return instance;

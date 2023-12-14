@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Movement : MonoBehaviour
@@ -8,23 +6,10 @@ public class Movement : MonoBehaviour
     public float speedY = 0.03f;
     public float rotationSpeed = 1.0f;
     public GameObject head;
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
 
     // Update is called once per frame
     void Update()
     {
-        //Debug.Log(head.transform.forward);
-        //Vector2 axis = OVRInput.Get(OVRInput.Axis2D.PrimaryThumbstick);
-        //Vector3 axisInput = new Vector3(axis.x, 0f, axis.y);
-        //Vector3 direction = head.transform.forward;
-
-        //Debug.Log(string.Format("{0} {1}", axisInput, direction));
-
-        //transform.position += new Vector3(direction.x * axisInput.x, direction.y, direction.z * axisInput.y) * speed;
 
         if (OVRInput.Get(OVRInput.Button.One))
         {

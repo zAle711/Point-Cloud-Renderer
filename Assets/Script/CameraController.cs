@@ -7,7 +7,6 @@ public class CameraController : MonoBehaviour
 
     public GameObject sphere;
 
-    // Update is called once per frame
     void Update()
     {
         // Move the camera forward, backward, left, and right
