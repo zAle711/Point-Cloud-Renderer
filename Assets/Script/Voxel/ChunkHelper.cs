@@ -168,7 +168,7 @@ public static class ChunkHelper
     {
 		Dictionary<int, string> IntToStringTemp = new Dictionary<int, string>();
 
-		for (int i = -100;  i <= 100; i++)
+		for (int i = -1000;  i <= 1000; i++)
         {
 			IntToStringTemp.Add(i, i.ToString());
         }

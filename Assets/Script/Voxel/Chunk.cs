@@ -10,23 +10,30 @@ public class Chunk : MonoBehaviour
 	private GameObject LOD1;
 
 	public string chunkName;
-    public int newBlocks = 0;
+	public int newBlocks = 0;
 
 	public bool done = false;
 	public bool started = false;
+
+	private List<Vector3> points;
 
 	private Vector3[] vertices;
 	private int[] triangles;
 
 	void Awake()
-    {
+	{
 		chunkSize = VoxelConfiguration.Configuration().ChunkSize;
+		points = new List<Vector3>();
+
 		LOD0 = transform.Find("LOD0").gameObject;
 		LOD1 = transform.Find("LOD1").gameObject;
-
 		LOD1.GetComponent<MeshFilter>().mesh = ChunkHelper.CreateCubeMesh(chunkSize);
 	}
 
+	public List<Vector3> GetPoints()
+    {
+		return points;
+    }
 
 	public void SetPosition(Vector3Int position)
     {
@@ -46,8 +53,23 @@ public class Chunk : MonoBehaviour
 		foreach(int point in data)
         {
 			chunkData[point] = 1;
-        }
+			AddPoints(point);
+
+		}
+		
     }
+
+	private void AddPoints(int idx)
+    {
+
+		int z = idx / (chunkSize * chunkSize);
+		idx -= (z * chunkSize * chunkSize);
+		int y = idx / chunkSize;
+		int x = idx % chunkSize;
+
+		points.Add(new Vector3(transform.position.x + x / 100.0f, transform.position.y + y / 100.0f, transform.position.z + z / 100.0f));
+		
+	}
 
     private void GreedyChunk()
     {

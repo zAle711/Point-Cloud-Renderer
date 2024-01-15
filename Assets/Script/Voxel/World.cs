@@ -68,7 +68,7 @@ public class World : MonoBehaviour
 
         if (VoxelConfiguration.Configuration().FileName != "") ReadCloudFromFile();
 
-    }
+	}
 
 
     private IEnumerator RenderWorldAsync()
@@ -107,7 +107,7 @@ public class World : MonoBehaviour
 		}
 
 		coroutineStarted = false;
-		Debug.Log("Rendering Coroutine Finita!");
+		//Debug.Log("Rendering Coroutine Finita!");
 	}
 
     void AddBlocksToList()
@@ -146,17 +146,18 @@ public class World : MonoBehaviour
 
 		AddBlockToWorld();
 
-        if (!coroutineStarted && chunksToUpdate.Count != 0)
+        if (!coroutineStarted && chunksToUpdate.Count != 0 && true)
         {
-			Debug.Log("Coroutine Per Rendering partita");
+			//Debug.Log("Coroutine Per Rendering partita");
 			coroutineStarted = true;
-            StartCoroutine(RenderWorldAsync());
+            //StartCoroutine(RenderWorldAsync());
         }
 
 		if (!coroutineStartedGameObjects && gameObjectsToAdd.Count != 0)
         {
-			Debug.Log("Coroutine Per gameObject partita");
+			//Debug.Log("Coroutine Per gameObject partita");
 			coroutineStartedGameObjects = true;
+			//TestAddGO();
 			StartCoroutine(AddGameObjectsChunkToWorld());
 
 		}
@@ -264,7 +265,7 @@ public class World : MonoBehaviour
 
         if (Centimeters)
         {
-            int index =x + y * CHUNKSIZE + z * CHUNKSIZE * CHUNKSIZE;
+            int index = x + y * CHUNKSIZE + z * CHUNKSIZE * CHUNKSIZE;
 			if (chunkData != null)
 				FillChunkData(chunkData, index);
 			else

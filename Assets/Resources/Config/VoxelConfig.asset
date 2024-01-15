@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ChunkSize: 50
   InvertYZ: 1
-  Centimeters: 0
+  Centimeters: 1
   BlocksAtTime: 2500
   TopicName: 
   FileName: global_point_cloud_unreal

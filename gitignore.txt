@@ -70,12 +70,3 @@ crashlytics-build.properties
 # Temporary auto-generated Android Assets
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
-
-/[Aa]ssets/Hull-Delaunay-Voronoi-master
-/[Aa]ssets/global_point_cloud.txt
-/[Aa]ssets/TextMesh Pro/*
-/[Aa]ssets/Point Clouds Txt/*
-/[Aa]ssets/Oculus/*
-/[Aa]ssets/Plugins/*
-/[Aa]ssets/XR/*
-/[Aa]ssets/Samples/*

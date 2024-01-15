@@ -94,6 +94,7 @@ GameObject:
   - component: {fileID: 5369945171847833322}
   - component: {fileID: 5369945171847833317}
   - component: {fileID: 7046949068406105480}
+  - component: {fileID: -5570965231742472380}
   m_Layer: 0
   m_Name: Chunk
   m_TagString: Untagged
@@ -132,11 +133,11 @@ LODGroup:
   m_AnimateCrossFading: 0
   m_LastLODIsBillboard: 0
   m_LODs:
-  - screenRelativeHeight: 0.29502374
+  - screenRelativeHeight: 0.999
     fadeTransitionWidth: 0
     renderers:
     - renderer: {fileID: 5369945171230312694}
-  - screenRelativeHeight: 0.051541414
+  - screenRelativeHeight: 0
     fadeTransitionWidth: 0
     renderers:
     - renderer: {fileID: 5369945172561972715}
@@ -158,6 +159,27 @@ MonoBehaviour:
   newBlocks: 0
   done: 0
   started: 0
+--- !u!65 &-5570965231742472380
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5369945171847833318}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.5, y: 0.5, z: 0.5}
+  m_Center: {x: 0.25, y: 0.25, z: 0.25}
 --- !u!1 &5369945172561972714
 GameObject:
   m_ObjectHideFlags: 0
