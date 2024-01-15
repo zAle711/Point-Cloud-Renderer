@@ -12,6 +12,8 @@ public class CameraController : MonoBehaviour
     private Vector3[] points;
     private int[] colors;
 
+    public int totalPoints = 0;
+
     private float last;
     public float interval = 0.5f;
     
@@ -33,17 +35,19 @@ public class CameraController : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         nearPoints.Add(other.gameObject.name, other.gameObject.GetComponent<Chunk>().GetPoints());
+
+        other.transform.GetChild(1).GetComponent<MeshRenderer>().enabled = false;
     }
 
     private void OnTriggerExit(Collider other)
     {
         nearPoints.Remove(other.gameObject.name);
+        other.transform.GetChild(1).GetComponent<MeshRenderer>().enabled = true;
     }
 
 
     void Update()
     {
-        //GetCurrentChunk();
 
         if (Time.realtimeSinceStartup - last > interval)
         {
@@ -88,6 +92,7 @@ public class CameraController : MonoBehaviour
         }
 
         pointLoaded = true;
+        totalPoints = points.Length;
 
     }
 

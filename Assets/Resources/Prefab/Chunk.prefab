@@ -159,6 +159,7 @@ MonoBehaviour:
   newBlocks: 0
   done: 0
   started: 0
+  totalPoints: 0
 --- !u!65 &-5570965231742472380
 BoxCollider:
   m_ObjectHideFlags: 0

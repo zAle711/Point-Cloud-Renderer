@@ -15,6 +15,8 @@ public class Chunk : MonoBehaviour
 	public bool done = false;
 	public bool started = false;
 
+	public int totalPoints = 0;
+
 	private List<Vector3> points;
 
 	private Vector3[] vertices;
@@ -54,9 +56,8 @@ public class Chunk : MonoBehaviour
         {
 			chunkData[point] = 1;
 			AddPoints(point);
-
+			totalPoints += 1;
 		}
-		
     }
 
 	private void AddPoints(int idx)
@@ -68,7 +69,6 @@ public class Chunk : MonoBehaviour
 		int x = idx % chunkSize;
 
 		points.Add(new Vector3(transform.position.x + x / 100.0f, transform.position.y + y / 100.0f, transform.position.z + z / 100.0f));
-		
 	}
 
     private void GreedyChunk()

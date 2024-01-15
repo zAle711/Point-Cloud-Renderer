@@ -538,7 +538,6 @@ GameObject:
   - component: {fileID: 1064279829}
   - component: {fileID: 1064279828}
   - component: {fileID: 1064279827}
-  - component: {fileID: 1064279831}
   - component: {fileID: 1064279832}
   - component: {fileID: 1064279833}
   m_Layer: 0
@@ -562,6 +561,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   speed: 5
   sensitivity: 5
+  totalPoints: 0
   interval: 0.5
 --- !u!81 &1064279828
 AudioListener:
@@ -631,24 +631,12 @@ Transform:
   m_GameObject: {fileID: 1064279826}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.1528298, y: -0.28621557, z: 0.113373876}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1064279831
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1064279826}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6f1742a1d726e1b4e9fda466814024a3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!65 &1064279832
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -759,7 +747,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   pointCloudSubscriber: {fileID: 114116140}
   chunkPrefab: {fileID: 5369945171847833318, guid: 7ad78666594c1384aafe2c69fb2f634b, type: 3}
-  chunkMaterial: {fileID: 0}
+  myCamera: {fileID: 0}
 --- !u!4 &1223397313
 Transform:
   m_ObjectHideFlags: 0

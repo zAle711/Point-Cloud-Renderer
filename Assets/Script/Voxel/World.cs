@@ -17,7 +17,7 @@ public class World : MonoBehaviour
 {
 	public PointCloudSubscriber pointCloudSubscriber;
 	public GameObject chunkPrefab;
-	public Material chunkMaterial;
+	public CameraController myCamera;
 
 	private int CHUNKSIZE;
 	private int CHUNKDATALENGTH;
@@ -25,6 +25,8 @@ public class World : MonoBehaviour
 	private bool InvertYZ;
 	private bool Centimeters;
 	private bool readingFromRos;
+
+
 
 	//Datastractures to handle voxels
 	private List<Vector3> blocksList;
@@ -64,7 +66,7 @@ public class World : MonoBehaviour
 
 		LookUpTableDM = ChunkHelper.FillTableDM();
 
-		//textLabel = GameObject.FindWithTag("Info").GetComponent<TextMeshProUGUI>();
+		textLabel = GameObject.FindWithTag("Info").GetComponent<TextMeshProUGUI>();
 
         if (VoxelConfiguration.Configuration().FileName != "") ReadCloudFromFile();
 
@@ -135,7 +137,7 @@ public class World : MonoBehaviour
 
 	private string GetTextInfo()
     {
-		return string.Format("Chunks creati {0}\nChunk da renderizzare {1}\nGameObject da aggiungere {2}\nFPS {3}", chunks.Count, chunksToUpdate.Count ,gameObjectsToAdd.Count, (int) (1.0f / Time.deltaTime));
+		return string.Format("Chunks creati {0}\nGameObject da aggiungere {1}\nPunti Renderizzati: {2}", chunks.Count,gameObjectsToAdd.Count, myCamera.totalPoints);
     }
 
 	void Update()
@@ -162,7 +164,7 @@ public class World : MonoBehaviour
 
 		}
 
-		//textLabel.text = GetTextInfo();
+		textLabel.text = GetTextInfo();
 	}
 
 	void ReadCloudFromFile()
@@ -188,25 +190,58 @@ public class World : MonoBehaviour
 
 	private IEnumerator AddGameObjectsChunkToWorld()
     {
-		while (gameObjectsToAdd.Count > 0)
+
+        //foreach(string chunkName in gameObjectsToAdd.Keys)
+        //      {
+        //	var (position, indexs) = gameObjectsToAdd[chunkName];
+
+        //	if (indexs.Count < 25)
+        //	{
+        //		gameObjectsToAdd.Remove(chunkName);
+        //		continue;
+        //	}	
+
+
+        //	GameObject newChunk = Instantiate(chunkPrefab, transform);
+        //	newChunk.name = chunkName;
+        //	Chunk c = newChunk.GetComponent<Chunk>();
+        //	c.SetPosition(position);
+        //	c.SetChunkName(chunkName);
+        //	c.SetChunkData(indexs);
+
+        //	chunks.Add(chunkName, c);
+        //	chunksToUpdate.Add(chunkName);
+        //	gameObjectsToAdd.Remove(chunkName);
+        //	yield return new WaitForSeconds(0.03f);
+
+        //}
+
+        while (gameObjectsToAdd.Count > 0)
         {
-			string chunkName = gameObjectsToAdd.Keys.First();
-			var (position, indexs) = gameObjectsToAdd[chunkName];
+            string chunkName = gameObjectsToAdd.Keys.First();
+            var (position, indexs) = gameObjectsToAdd[chunkName];
 
-			GameObject newChunk = Instantiate(chunkPrefab, transform);
-			newChunk.name = chunkName;
-			Chunk c = newChunk.GetComponent<Chunk>();
-			c.SetPosition(position);
-			c.SetChunkName(chunkName);
-			c.SetChunkData(indexs);
+			if (indexs.Count < 50)
+            {
+				gameObjectsToAdd.Remove(chunkName);
+				Debug.Log("Chunk Rimosso");
+				continue;
+            }
 
-			chunks.Add(chunkName, c);
-			chunksToUpdate.Add(chunkName);
-			gameObjectsToAdd.Remove(chunkName);
-			yield return new WaitForSeconds(0.03f);
+            GameObject newChunk = Instantiate(chunkPrefab, transform);
+            newChunk.name = chunkName;
+            Chunk c = newChunk.GetComponent<Chunk>();
+            c.SetPosition(position);
+            c.SetChunkName(chunkName);
+            c.SetChunkData(indexs);
+
+            chunks.Add(chunkName, c);
+            chunksToUpdate.Add(chunkName);
+            gameObjectsToAdd.Remove(chunkName);
+            yield return new WaitForSeconds(0.03f);
         }
 
-		coroutineStartedGameObjects = false;
+        coroutineStartedGameObjects = false;
     }
 
 	private void AddBlock(Vector3 point_position)
