@@ -221,12 +221,12 @@ public class World : MonoBehaviour
             string chunkName = gameObjectsToAdd.Keys.First();
             var (position, indexs) = gameObjectsToAdd[chunkName];
 
-			if (indexs.Count < 50)
-            {
-				gameObjectsToAdd.Remove(chunkName);
-				Debug.Log("Chunk Rimosso");
-				continue;
-            }
+			//if (indexs.Count < 50)
+   //         {
+			//	gameObjectsToAdd.Remove(chunkName);
+			//	Debug.Log("Chunk Rimosso");
+			//	continue;
+   //         }
 
             GameObject newChunk = Instantiate(chunkPrefab, transform);
             newChunk.name = chunkName;

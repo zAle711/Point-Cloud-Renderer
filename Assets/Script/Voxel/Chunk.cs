@@ -6,11 +6,11 @@ public class Chunk : MonoBehaviour
 {
 	private int chunkSize;
 	public int[] chunkData;
-	private GameObject LOD0;
-	private GameObject LOD1;
 
 	public string chunkName;
 	public int newBlocks = 0;
+
+	public MeshRenderer meshRenderer;
 
 	public bool done = false;
 	public bool started = false;
@@ -22,14 +22,16 @@ public class Chunk : MonoBehaviour
 	private Vector3[] vertices;
 	private int[] triangles;
 
+	public Vector3 chunkPosition;
+
 	void Awake()
 	{
 		chunkSize = VoxelConfiguration.Configuration().ChunkSize;
 		points = new List<Vector3>();
-
-		LOD0 = transform.Find("LOD0").gameObject;
-		LOD1 = transform.Find("LOD1").gameObject;
-		LOD1.GetComponent<MeshFilter>().mesh = ChunkHelper.CreateCubeMesh(chunkSize);
+		meshRenderer = transform.GetChild(0).GetComponent<MeshRenderer>();
+		//LOD0 = transform.Find("LOD0").gameObject;
+		//LOD1 = transform.Find("LOD1").gameObject;
+		//LOD1.GetComponent<MeshFilter>().mesh = ChunkHelper.CreateCubeMesh(chunkSize);
 	}
 
 	public List<Vector3> GetPoints()
@@ -40,7 +42,7 @@ public class Chunk : MonoBehaviour
 	public void SetPosition(Vector3Int position)
     {
 		float positionOffset = 100.0f / chunkSize;
-		Vector3 chunkPosition = new Vector3( position.x / positionOffset,position.y / positionOffset, position.z / positionOffset);	
+		chunkPosition = new Vector3( position.x / positionOffset,position.y / positionOffset, position.z / positionOffset);	
 		transform.position = chunkPosition;
     }
 	
@@ -240,7 +242,7 @@ public class Chunk : MonoBehaviour
 		mesh.RecalculateBounds();
 		mesh.RecalculateNormals();
 
-		LOD0.GetComponent<MeshFilter>().mesh = mesh;
+		//LOD0.GetComponent<MeshFilter>().mesh = mesh;
 
 	}
 	

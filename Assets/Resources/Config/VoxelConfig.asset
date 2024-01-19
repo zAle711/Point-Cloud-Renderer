@@ -15,6 +15,6 @@ MonoBehaviour:
   ChunkSize: 50
   InvertYZ: 1
   Centimeters: 1
-  BlocksAtTime: 2500
+  BlocksAtTime: 1000
   TopicName: 
-  FileName: global_point_cloud_unreal
+  FileName: global_point_cloud_rgb

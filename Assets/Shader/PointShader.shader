@@ -1,7 +1,4 @@
 Shader "Custom/MyDefaultPoint" {
-    Properties {
-        _PointSize ("Point Size", float) = 0.05
-    }
     Subshader {
         Tags { "RenderType"="Opaque" }
         Pass {
@@ -19,7 +16,6 @@ Shader "Custom/MyDefaultPoint" {
 
             //float _PointSize = 5.0f;
             float4x4 _Transform;
-            float _PointSize;
 
             // StructuredBuffer<Point> _PointBuffer;
             StructuredBuffer<float3> _Positions;
@@ -27,7 +23,6 @@ Shader "Custom/MyDefaultPoint" {
 
             struct v2f {
                 float4 pos : SV_POSITION;
-                half psize : PSIZE;
                 half4 col : COLOR;
             };
 
@@ -42,11 +37,8 @@ Shader "Custom/MyDefaultPoint" {
                     ((icol      ) & 0xff) / 255.0f,
                 1); 
 
-
-                //o.pos = UnityObjectToClipPos(mul(_Transform, float4(pos, 1)));
                 o.pos = UnityObjectToClipPos(pos);
                 o.col = col;
-                o.psize = _PointSize;
                 return o;
             }
 

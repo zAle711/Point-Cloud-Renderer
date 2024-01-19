@@ -36,7 +36,7 @@ public class PointCloudWithShader : MonoBehaviour
         mesh = new Mesh();
         GetComponent<MeshFilter>().mesh = mesh;
 
-        meshRenderer.material = new Material(Shader.Find("Custom/VertexColor"));
+        meshRenderer.material = new Material(Shader.Find("Custom/MyDefaultPoint"));
         pointMaterial = new Material(Shader.Find("Custom/MyDefaultPoint"));
 
         rosConnection = ROSConnection.GetOrCreateInstance();
@@ -57,14 +57,8 @@ public class PointCloudWithShader : MonoBehaviour
         List<Vector3> temp_points = new List<Vector3>();
         List<int> temp_colors = new List<int>();
         List<Color> temp_mesh_colors = new List<Color>();
-        int i = 0;
-        int STOP = 100000;
         while (!inp_stm.EndOfStream)
         {
-            if (i >= STOP)
-            {
-                break;
-            }
             string inp_ln = inp_stm.ReadLine();
             string[] coords = inp_ln.Split();
 
@@ -87,9 +81,8 @@ public class PointCloudWithShader : MonoBehaviour
             temp_colors.Add(point_color);
             temp_mesh_colors.Add(new Color(255,255,255));
 
-            i += 1;
         }
-        Debug.Log("Punti totali: " + i);
+        Debug.Log("Punti totali: " + temp_points.Count);
         points = temp_points.ToArray();
         colors = temp_colors.ToArray();
         meshColors = temp_mesh_colors.ToArray();
@@ -97,26 +90,9 @@ public class PointCloudWithShader : MonoBehaviour
         newMessage = true;
         //return points;
     }
-
-    void OnMessageReceivedPoseArray(PoseArrayMsg msg)
-    {
-        points = new Vector3[msg.poses.Length];
-        colors = new int[msg.poses.Length];
-        //meshColors = new Color[msg.poses.Length];
-
-        for(int i = 0; i < msg.poses.Length; i++)
-        {
-            Vector3 p = new Vector3( (float) msg.poses[i].position.x, (float)msg.poses[i].position.z, (float)msg.poses[i].position.y);
-            points[i] = p;
-            //meshColors[i] = new Color(255, 255, 255);
-            colors[i] = 16777215;
-        }
-
-        newMessage = true;
-    }
     void OnMessageReceived(PointCloud2Msg msg)
     {
-        string debugTxt = string.Format("Width: {0} --- Height: {1} --- Row Step: {2}", msg.width, msg.height, msg.row_step);
+        //string debugTxt = string.Format("Width: {0} --- Height: {1} --- Row Step: {2}", msg.width, msg.height, msg.row_step);
 
         int size = msg.data.Length;
 
@@ -133,13 +109,6 @@ public class PointCloudWithShader : MonoBehaviour
         float y;
         float z;
 
-        //points = new Vector3[size];
-        //colors = new int[size];
-        //meshColors = new Color[size];
-
-        //List<Vector3> temp_points = new List<Vector3>();
-        //List<Color> temp_colors = new List<Color>();
-
         points = new Vector3[size];
         colors = new int[size];
 
@@ -153,16 +122,7 @@ public class PointCloudWithShader : MonoBehaviour
             y = BitConverter.ToSingle(byteArray, y_posi);
             z = BitConverter.ToSingle(byteArray, z_posi);
 
-            if (float.IsNaN(x) || float.IsNaN(y) || float.IsNaN(z))
-            {
-                continue;
-            } 
-
-            //Debug.Log(new Vector3(x, z, y));
-            //temp_points.Add(new Vector3(x, z, y));
-            //temp_colors.Add(new Color(255, 255, 255));
             points[n] = new Vector3(x, z, y);
-            //points[n] = new Vector3(x, y, z);
             colors[n] = 16777215;
 
 
@@ -172,7 +132,6 @@ public class PointCloudWithShader : MonoBehaviour
         //meshColors = temp_colors.ToArray();
 
         newMessage = true;
-        Debug.Log("Punti Ricevuti: " + size);
         //Debug.Log(debugTxt);
 
 
@@ -187,7 +146,7 @@ public class PointCloudWithShader : MonoBehaviour
         if (newMessage)
         {
             //Debug.Log("Disegno!");
-            DrawPoints();
+            DrawMesh();
         }
 
         if (Input.GetKeyDown(KeyCode.Space))
@@ -211,25 +170,10 @@ public class PointCloudWithShader : MonoBehaviour
         mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
 
         mesh.SetIndices(indices, MeshTopology.Points, 0);
-        mesh.RecalculateBounds();
+        //mesh.RecalculateBounds();
         //AssetDatabase.CreateAsset(mesh, "Assets/testMeshColorRTABMap4.asset");
         //AssetDatabase.SaveAssets();
         newMessage = false; //Resets and waits for new message
-    }
-
-    private void WritePointsToFile()
-    {
-        StreamWriter out_str = new StreamWriter("Assets/global_point_cloud.txt");
-
-        foreach(Vector3 p in points)
-        {
-            string line = string.Format("{0} {1} {2}", p.x, p.y, p.z);
-            out_str.WriteLine(line);
-        }
-
-        //out_str.WriteLine("ciao");
-
-        out_str.Close();
     }
 
     private void DrawPoints()
