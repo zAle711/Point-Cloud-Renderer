@@ -44,7 +44,7 @@ public class RawPointCloudSubscriber : MonoBehaviour
 
     private void ReadFile()
     {
-        string path = string.Format("Assets/Point Clouds txt/{0}.txt", "global_point_cloud_unreal");
+        string path = string.Format("Assets/Point Clouds txt/{0}.txt", "point_cloud_unreal_alg");
         StreamReader inp_stm = new StreamReader(path);
         bool InvertYZ = true;
         int offsetY = InvertYZ ? 2 : 1;
@@ -58,7 +58,7 @@ public class RawPointCloudSubscriber : MonoBehaviour
             string inp_ln = inp_stm.ReadLine();
             string[] coords = inp_ln.Split();
 
-            if (!coords[0].Contains(".") || !coords[1].Contains(".") || !coords[2].Contains(".")) continue;
+            //if (!coords[0].Contains(".") || !coords[1].Contains(".") || !coords[2].Contains(".")) continue;
 
             Vector3 point_position = new Vector3(float.Parse(coords[0], CultureInfo.InvariantCulture), float.Parse(coords[0 + offsetY], CultureInfo.InvariantCulture), float.Parse(coords[0 + offsetZ], CultureInfo.InvariantCulture));
             all_points.Add(point_position);

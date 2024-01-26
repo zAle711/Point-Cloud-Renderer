@@ -79,3 +79,8 @@ crashlytics-build.properties
 /[Aa]ssets/Plugins/*
 /[Aa]ssets/XR/*
 /[Aa]ssets/Samples/*
+/[Aa]ssets/FarlandSkies/*
+/[Aa]ssets/Datastructures/*
+/[Aa]ssets/Octree/*
+/[Aa]ssets/Thirdparty/*
+/[Aa]ssets/[Ss]treamingAssets/*

@@ -1,16 +1,36 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using ale711;
-public class Controller : MonoBehaviour
+public class PlayerController : MonoBehaviour
 {
     public float speed = 5.0f;
     public float sensitivity = 5.0f;
+
+    private WayPointPublisher waypointPub;
+
+    private void Start()
+    {
+        waypointPub = new WayPointPublisher();
+    }
+
+    void FireRay()
+    {
+        Ray ray = new Ray(transform.position, transform.forward);
+        RaycastHit hitData;
+        if (Physics.Raycast(ray, out hitData))
+        {
+            Debug.Log(hitData.point);
+            waypointPub.SendWaypoint(hitData.point);
+        }
+    }
 
     // Update is called once per frame
     void Update()
     {
         HandleMovement();
+
+        if (Input.GetKeyDown(KeyCode.Mouse0))
+        {
+            FireRay();
+        }
     }
     private void HandleMovement()
     {
