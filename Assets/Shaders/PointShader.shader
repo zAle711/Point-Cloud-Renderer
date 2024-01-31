@@ -75,7 +75,7 @@
 
 // Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
 
-Shader "Custom/MyDefaultPoint" {
+Shader "Unlit/PointShader" {
     Properties
    {
        _LeftEyeColor("Left Eye Color", COLOR) = (0,1,0,1)
@@ -83,7 +83,7 @@ Shader "Custom/MyDefaultPoint" {
    }
     Subshader {
         Tags { "RenderType" = "Opaque" "RenderPipeline" = "UniversalRenderPipeline" }
-        LOD 1
+        LOD 100
         Pass {
             CGPROGRAM
 
@@ -105,7 +105,6 @@ Shader "Custom/MyDefaultPoint" {
             // StructuredBuffer<Point> _PointBuffer;
             StructuredBuffer<float3> _Positions;
             StructuredBuffer<uint> _Colors;
-            StructuredBuffer<float3> _Center;
 
             struct v2f {
                 float4 pos : SV_POSITION;

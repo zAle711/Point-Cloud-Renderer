@@ -1,8 +1,7 @@
-using PointCloudVR;
+using System;
 using TMPro;
-using UnityEditor;
 using UnityEngine;
-using System.Collections.Generic;
+
 
 namespace PointCloudVR
 {
@@ -22,16 +21,13 @@ namespace PointCloudVR
 
         public int maxPointsToRender = 100000;
         public float boundSize = 0.5f;
-        
-        //OCtree Partitions
-        private GizmoBox[] gizmoBoxes;
 
         //Objects to Render only visible points
         private FrustumCulling frustumCulling;
         private PointCloudRenderer pointCloudRenderer;
         
         //Data structure to store Points
-        private PointOctree<int> Octree;
+        private PointOctree ocTree;
 
         private GameObject floor;
         private TextMeshProUGUI textLabel;
@@ -41,6 +37,8 @@ namespace PointCloudVR
         private int[] colors;
         private Vector3[] normals;
 
+        private DateTime lastUpdate;
+
         private void Awake()
         {
             pointCloudRenderer = new PointCloudRenderer();
@@ -49,62 +47,56 @@ namespace PointCloudVR
         // Start is called before the first frame update
         void Start()
         {
-            //Read PointCloud from file and create KDTree to store points.
-            Debug.Log(System.IO.Path.Combine(Application.streamingAssetsPath, fileName));
-            pointCloud = PointCloudReader.ReadFileWithNormals(out points, out colors, out normals, fileName, cubeSize);
-            
-            //Octree = new PointOctree<int>(10, new Vector3(0, 5, 0), 1f);
-
-            //for (int i = 0; i < pointCloud.Length; i++)
-            //{
-            //    Octree.Add(pointCloudColors[i], pointCloud[i]);
-            //}
-
-            //Debug.Log($"Punti caricati: {pointCloud.Length}");
-
             cam = Camera.main;
             floor = GameObject.FindGameObjectWithTag("Floor");
             textLabel = GameObject.FindGameObjectWithTag("Info").GetComponent<TextMeshProUGUI>();
+           
+            //Read PointCloud from file and create Octree to store points.
+            pointCloud = PointCloudReader.ReadFileWithNormals(out points, out colors, out normals, fileName, cubeSize);
+            
+            CreateOctree();
 
-            textLabel.text = $"Punti dal file: {pointCloud.Length}";
+            textLabel.text = $"Punti caricati nell' Octree: {ocTree.Count}";
 
-            InizializeFloor();
-            //frustumCulling = new FrustumCulling(Octree, boundSize, maxPointsToRender);
-            //frustumCulling.SetCamera(cam, transform.localToWorldMatrix);
-            //frustumCulling.Start();
+            PointCloudReader.CreateFloor(floor);
+            
+            frustumCulling = new FrustumCulling(ocTree, boundSize, maxPointsToRender); 
+            
+            frustumCulling.SetCamera(cam, transform.localToWorldMatrix);
 
-            pointCloudRenderer.SetData(points, colors, normals);
+            frustumCulling.Start();
+
+            //pointCloudRenderer.SetData(points, colors, normals);
         }
 
-        private void InizializeFloor()
+        private void CreateOctree()
         {
-            Vector3[] meshVertex = PointCloudReader.GetFloorVertex();
-            if (meshVertex == null) return;
+            ocTree = new PointOctree(25f, Vector3.zero, 2.5f);
 
-            MeshFilter meshFilter = floor.GetComponent<MeshFilter>();
-            MeshCollider meshCollider = floor.GetComponent<MeshCollider>();
-            Mesh mesh = new Mesh();
-            mesh.vertices = meshVertex;
-            mesh.triangles = new int[6] { 0, 1, 3, 1, 2, 3 };
-            mesh.RecalculateBounds();
-            mesh.RecalculateNormals();
-
-            meshFilter.mesh = mesh;
-            meshCollider.sharedMesh = mesh;
+            foreach(Point p in pointCloud)
+            {
+                ocTree.Add(p, p.position);
+            }
         }
-
 
         private void RetrieveData()
         {
             if (frustumCulling == null) return;
 
-            var (points, colors) = frustumCulling.GetData();
-
-            if (points != null && colors != null)
+            if (frustumCulling.GetLastUpdateTime() == lastUpdate)
             {
-                pointCloudRenderer.SetData(points, colors);
-                textLabel.text = $"Punti Renderizzati: {points.Length}";
+                //Debug.Log("Punti già aggiornati");
+                return;
             }
+
+            var (p, c, n) = frustumCulling.GetData();
+
+            lastUpdate = frustumCulling.GetLastUpdateTime();
+            textLabel.text = $"Vertici totali: {p.Length}";
+            if (renderMode == RenderMode.POINT)
+                pointCloudRenderer.SetData(p, c);
+            else
+                if (n != null) pointCloudRenderer.SetData(p, c, n);
 
 
         }
@@ -112,26 +104,27 @@ namespace PointCloudVR
         void Update()
         {
 
-            //RetrieveData();
-            //frustumCulling.SetCamera(cam, transform.localToWorldMatrix);
+            RetrieveData();
+            frustumCulling.SetCamera(cam, transform.localToWorldMatrix);
             ////textLabel.text = $"Punti Renderizzati: {pointCloudRenderer.GetNPoints()}";
             //pointCloudRenderer.SetWorldMatrix(transform.localToWorldMatrix);
         }
 
 
-        //private void OnDrawGizmos()
-        //{
-        //    if (gizmoBoxes == null) return;
+        private void OnDrawGizmos()
+        {
+            ocTree.DrawAllBounds();
+            //if (gizmoBoxes == null) return;
 
-        //    Handles.color = new Color(0f, 1f, 0f, 0.5f);
+            //Handles.color = new Color(0f, 1f, 0f, 0.5f);
 
-        //    for (int i = 0; i < gizmoBoxes.Length; i++)
-        //    {
-        //        Handles.DrawWireCube(gizmoBoxes[i].position + gizmoBoxes[i].size / 2, gizmoBoxes[i].size);
-        //    }
+            //for (int i = 0; i < gizmoBoxes.Length; i++)
+            //{
+            //    Handles.DrawWireCube(gizmoBoxes[i].position + gizmoBoxes[i].size / 2, gizmoBoxes[i].size);
+            //}
 
-        //    Handles.color = Color.white;
-        //}
+            //Handles.color = Color.white;
+        }
 
         private void OnRenderObject()
         {
@@ -139,16 +132,16 @@ namespace PointCloudVR
                 pointCloudRenderer.Render();
         }
 
-        //private void OnValidate()
-        //{
-        //    if (frustumCulling != null)
-        //    {
-        //        frustumCulling.SetMaxPoints(maxPointsToRender);
-        //        pointCloudRenderer.SetTopology(renderMode);
-        //        frustumCulling.SetRenderMode(renderMode);
-        //        frustumCulling.SetCubeSize(cubeSize);
-        //    }
-        //}
+        private void OnValidate()
+        {
+            if (frustumCulling != null)
+            {
+                frustumCulling.SetMaxPoints(maxPointsToRender);
+                pointCloudRenderer.SetTopology(renderMode);
+                frustumCulling.SetRenderMode(renderMode);
+                frustumCulling.SetCubeSize(cubeSize);
+            }
+        }
     }
 
 }

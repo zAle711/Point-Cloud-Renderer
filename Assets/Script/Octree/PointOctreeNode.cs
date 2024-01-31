@@ -1,10 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-
+using PointCloudVR;
 // A node in a PointOctree
 // Copyright 2014 Nition, BSD licence (see LICENCE file). www.momentstudio.co.nz
-public class PointOctreeNode<T> {
+
+public class PointOctreeNode{
 	// Centre of this node
 	public Vector3 Center { get; private set; }
 
@@ -21,7 +22,7 @@ public class PointOctreeNode<T> {
 	readonly List<OctreeObject> objects = new List<OctreeObject>();
 
 	// Child nodes, if any
-	PointOctreeNode<T>[] children = null;
+	PointOctreeNode[] children = null;
 
 	bool HasChildren { get { return children != null; } }
 
@@ -37,7 +38,7 @@ public class PointOctreeNode<T> {
 
 	// An object in the octree
 	class OctreeObject {
-		public T Obj;
+		public Point Obj;
 		public Vector3 Pos;
 	}
 
@@ -59,7 +60,7 @@ public class PointOctreeNode<T> {
 	/// <param name="obj">Object to add.</param>
 	/// <param name="objPos">Position of the object.</param>
 	/// <returns></returns>
-	public bool Add(T obj, Vector3 objPos) {
+	public bool Add(Point obj, Vector3 objPos) {
 		if (!Encapsulates(bounds, objPos)) {
 			return false;
 		}
@@ -72,7 +73,7 @@ public class PointOctreeNode<T> {
 	/// </summary>
 	/// <param name="obj">Object to remove.</param>
 	/// <returns>True if the object was removed successfully.</returns>
-	public bool Remove(T obj) {
+	public bool Remove(Point obj) {
 		bool removed = false;
 
 		for (int i = 0; i < objects.Count; i++) {
@@ -105,7 +106,7 @@ public class PointOctreeNode<T> {
 	/// <param name="obj">Object to remove.</param>
 	/// <param name="objPos">Position of the object.</param>
 	/// <returns>True if the object was removed successfully.</returns>
-	public bool Remove(T obj, Vector3 objPos) {
+	public bool Remove(Point obj, Vector3 objPos) {
 		if (!Encapsulates(bounds, objPos)) {
 			return false;
 		}
@@ -119,7 +120,7 @@ public class PointOctreeNode<T> {
 	/// <param name="maxDistance">Maximum distance from the ray to consider.</param>
 	/// <param name="result">List result.</param>
 	/// <returns>Objects within range.</returns>
-	public void GetNearby(ref Ray ray, float maxDistance, List<T> result) {
+	public void GetNearby(ref Ray ray, float maxDistance, List<Point> result) {
 		// Does the ray hit this node at all?
 		// Note: Expanding the bounds is not exactly the same as a real distance check, but it's fast.
 		// TODO: Does someone have a fast AND accurate formula to do this check?
@@ -144,23 +145,46 @@ public class PointOctreeNode<T> {
 			}
 		}
 	}
-	
-	public void GetVisiblePoints(Plane[] planes, (List<T>, List<Vector3>) result)
+
+	public void GetVisibleQuads(Plane[] planes, float size, int maxPoints, List<Point> quads)
     {
-		if (!PointCloudVR.Util.TestPlanesAABB(planes, bounds))
+		if (!Util.TestPlanesAABB(planes, bounds))
+		{
+			return;
+		}
+
+		foreach(OctreeObject obj in objects)
+        {
+			quads.AddRange(PointCloudReader.AddFaceWithNormal(obj.Pos, obj.Obj.color, obj.Obj.normal, size));
+        }
+
+		if (quads.Count >= maxPoints * 4)
+		{
+			return;
+		}
+
+		if (children != null)
+		{
+			for (int i = 0; i < 8; i++)
+			{
+				children[i].GetVisibleQuads(planes, size, maxPoints, quads);
+			}
+		}
+	}
+
+	public void GetVisiblePoints(Plane[] planes, int maxPoints , List<Point> result)
+    {
+		if (!Util.TestPlanesAABB(planes, bounds))
         {
 			return;
         }
 
-		result.Item1.AddRange(objects.Select(o => o.Obj));
-		result.Item2.AddRange(objects.Select(o => o.Pos));
+		foreach(OctreeObject obj in objects)
+        {
+			result.Add(new Point(obj.Pos, obj.Obj.color));
+        }
 
-		//for (int i = 0; i < objects.Count; i++)
-		//      {
-		//	result.Add(objects[i].Obj);
-		//      }
-
-		if (result.Item2.Count >= 1000000)
+		if (result.Count >= maxPoints)
         {
 			return;
         }
@@ -169,7 +193,7 @@ public class PointOctreeNode<T> {
         {
 			for (int i = 0; i < 8; i++)
 			{
-				children[i].GetVisiblePoints(planes, result);
+				children[i].GetVisiblePoints(planes, maxPoints, result);
 			}
 		}
     }
@@ -181,7 +205,7 @@ public class PointOctreeNode<T> {
 	/// <param name="maxDistance">Maximum distance from the position to consider.</param>
 	/// <param name="result">List result.</param>
 	/// <returns>Objects within range.</returns>
-	public void GetNearby(ref Vector3 position, float maxDistance, List<T> result) {
+	public void GetNearby(ref Vector3 position, float maxDistance, List<Point> result) {
         float sqrMaxDistance = maxDistance * maxDistance;
 
 #if UNITY_2017_1_OR_NEWER
@@ -220,7 +244,7 @@ public class PointOctreeNode<T> {
 	/// Return all objects in the tree.
 	/// </summary>
 	/// <returns>All objects.</returns>
-	public void GetAll(List<T> result) {
+	public void GetAll(List<Point> result) {
 		// add directly contained objects
 		result.AddRange(objects.Select(o => o.Obj));
 
@@ -236,7 +260,7 @@ public class PointOctreeNode<T> {
 	/// Set the 8 children of this octree.
 	/// </summary>
 	/// <param name="childOctrees">The 8 new child nodes.</param>
-	public void SetChildren(PointOctreeNode<T>[] childOctrees) {
+	public void SetChildren(PointOctreeNode[] childOctrees) {
 		if (childOctrees.Length != 8) {
 			Debug.LogError("Child octree array must be length 8. Was length: " + childOctrees.Length);
 			return;
@@ -297,7 +321,7 @@ public class PointOctreeNode<T> {
 	/// </summary>
 	/// <param name="minLength">Minimum dimensions of a node in this octree.</param>
 	/// <returns>The new root, or the existing one if we didn't shrink.</returns>
-	public PointOctreeNode<T> ShrinkIfPossible(float minLength) {
+	public PointOctreeNode ShrinkIfPossible(float minLength) {
 		if (SideLength < (2 * minLength)) {
 			return this;
 		}
@@ -427,7 +451,7 @@ public class PointOctreeNode<T> {
 	/// </summary>
 	/// <param name="obj">Object to add.</param>
 	/// <param name="objPos">Position of the object.</param>
-	void SubAdd(T obj, Vector3 objPos) {
+	void SubAdd(Point obj, Vector3 objPos) {
 		// We know it fits at this level if we've got this far
 
 		// We always put things in the deepest possible child
@@ -472,7 +496,7 @@ public class PointOctreeNode<T> {
 	/// <param name="obj">Object to remove.</param>
 	/// <param name="objPos">Position of the object.</param>
 	/// <returns>True if the object was removed successfully.</returns>
-	bool SubRemove(T obj, Vector3 objPos) {
+	bool SubRemove(Point obj, Vector3 objPos) {
 		bool removed = false;
 
 		for (int i = 0; i < objects.Count; i++) {
@@ -503,15 +527,15 @@ public class PointOctreeNode<T> {
 	void Split() {
 		float quarter = SideLength / 4f;
 		float newLength = SideLength / 2;
-		children = new PointOctreeNode<T>[8];
-		children[0] = new PointOctreeNode<T>(newLength, minSize, Center + new Vector3(-quarter, quarter, -quarter));
-		children[1] = new PointOctreeNode<T>(newLength, minSize, Center + new Vector3(quarter, quarter, -quarter));
-		children[2] = new PointOctreeNode<T>(newLength, minSize, Center + new Vector3(-quarter, quarter, quarter));
-		children[3] = new PointOctreeNode<T>(newLength, minSize, Center + new Vector3(quarter, quarter, quarter));
-		children[4] = new PointOctreeNode<T>(newLength, minSize, Center + new Vector3(-quarter, -quarter, -quarter));
-		children[5] = new PointOctreeNode<T>(newLength, minSize, Center + new Vector3(quarter, -quarter, -quarter));
-		children[6] = new PointOctreeNode<T>(newLength, minSize, Center + new Vector3(-quarter, -quarter, quarter));
-		children[7] = new PointOctreeNode<T>(newLength, minSize, Center + new Vector3(quarter, -quarter, quarter));
+		children = new PointOctreeNode[8];
+		children[0] = new PointOctreeNode(newLength, minSize, Center + new Vector3(-quarter, quarter, -quarter));
+		children[1] = new PointOctreeNode(newLength, minSize, Center + new Vector3(quarter, quarter, -quarter));
+		children[2] = new PointOctreeNode(newLength, minSize, Center + new Vector3(-quarter, quarter, quarter));
+		children[3] = new PointOctreeNode(newLength, minSize, Center + new Vector3(quarter, quarter, quarter));
+		children[4] = new PointOctreeNode(newLength, minSize, Center + new Vector3(-quarter, -quarter, -quarter));
+		children[5] = new PointOctreeNode(newLength, minSize, Center + new Vector3(quarter, -quarter, -quarter));
+		children[6] = new PointOctreeNode(newLength, minSize, Center + new Vector3(-quarter, -quarter, quarter));
+		children[7] = new PointOctreeNode(newLength, minSize, Center + new Vector3(quarter, -quarter, quarter));
 	}
 
 	/// <summary>
@@ -522,7 +546,7 @@ public class PointOctreeNode<T> {
 	void Merge() {
 		// Note: We know children != null or we wouldn't be merging
 		for (int i = 0; i < 8; i++) {
-			PointOctreeNode<T> curChild = children[i];
+			PointOctreeNode curChild = children[i];
 			int numObjects = curChild.objects.Count;
 			for (int j = numObjects - 1; j >= 0; j--) {
 				OctreeObject curObj = curChild.objects[j];
@@ -550,7 +574,7 @@ public class PointOctreeNode<T> {
 	bool ShouldMerge() {
 		int totalObjects = objects.Count;
 		if (children != null) {
-			foreach (PointOctreeNode<T> child in children) {
+			foreach (PointOctreeNode child in children) {
 				if (child.children != null) {
 					// If any of the *children* have children, there are definitely too many to merge,
 					// or the child woudl have been merged already

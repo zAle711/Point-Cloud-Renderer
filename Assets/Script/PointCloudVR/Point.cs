@@ -11,6 +11,13 @@ namespace PointCloudVR
             this.normal = normal;
         }
         
+        public Point(Vector3 position, int color)
+        {
+            this.position = position;
+            this.color = color;
+            normal = Vector3.zero;
+        }
+
         public Vector3 position { get;  }
         public int color { get;  }
         public Vector3 normal { get; }

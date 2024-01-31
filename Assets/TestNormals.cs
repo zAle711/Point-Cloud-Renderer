@@ -24,7 +24,7 @@ public class TestNormals : MonoBehaviour
     {
         ReadFileWithNormals();
 
-        mat = new Material(Shader.Find("Unlit/CubeShader"));
+        mat = new Material(Shader.Find("Unlit/QuadShader"));
 
         p = new ComputeBuffer(points.Length, 3 * sizeof(float));
         c = new ComputeBuffer(colors.Length, sizeof(int));

@@ -1,33 +1,35 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
-using Stopwatch = System.Diagnostics.Stopwatch;
 
 namespace PointCloudVR
 {
     class FrustumParams
     {
         
-        public PointOctree<int> OcTree;
+        public PointOctree OcTree;
+
         //Frustum Culling Params
         public Plane[] frustumPlanes;
-        public Bounds[] bounds;
-        public float boundSize;
+        
         public int maxPointsToRender;
 
         //Params To Render Only visible Cube Faces
         public Vector3 cameraPosition;
-        public Vector3 cameraDirection;
+        //public Vector3 cameraDirection;
 
         public bool running = true;
 
         public float fov;
         public bool quad = false;
         public float quadSize = 0.05f;
-        //Results of KDQuery
+
+        public DateTime lastUpdate;
+
         public Vector3[] pointsToRender;
         public int[] pointsColorsToRender;
-        public GizmoBox[] gizmoBoxes;
+        public Vector3[] normalsToRender;
 
     }
 
@@ -36,11 +38,10 @@ namespace PointCloudVR
         Thread thread;
         FrustumParams frustumParams;
 
-        public FrustumCulling(PointOctree<int> OcTree , float size, int maxPointsToRender)
+        public FrustumCulling(PointOctree OcTree , float size, int maxPointsToRender)
         {
             frustumParams = new FrustumParams();
             frustumParams.OcTree = OcTree;
-            frustumParams.boundSize = size;
             frustumParams.maxPointsToRender = maxPointsToRender;
             thread = new Thread(new ParameterizedThreadStart(ComputeInsidePoints));
         }
@@ -51,8 +52,6 @@ namespace PointCloudVR
             {
                 frustumParams.cameraPosition = camera.transform.position;
                 frustumParams.frustumPlanes = GeometryUtility.CalculateFrustumPlanes(camera.projectionMatrix * camera.worldToCameraMatrix * localWorldMatrix);
-                frustumParams.fov = camera.fieldOfView;
-                frustumParams.cameraDirection = camera.transform.forward;
                 //FORSE ALTEZZA SCHERMO
             }
         }
@@ -109,43 +108,108 @@ namespace PointCloudVR
             }
         }
 
-        public (Vector3[], int[]) GetData()
+        public (Vector3[], int[], Vector3[]) GetData()
         {
             lock (frustumParams)
             {
-                return (frustumParams.pointsToRender, frustumParams.pointsColorsToRender);
+                return (frustumParams.pointsToRender, frustumParams.pointsColorsToRender, frustumParams.normalsToRender);
+            }
+        }
+
+        public DateTime GetLastUpdateTime()
+        {
+            lock(frustumParams)
+            {
+                return frustumParams.lastUpdate;
             }
         }
 
         private void ComputeInsidePoints(object obj)
         {
             FrustumParams p = (FrustumParams)obj;
-            PointOctree<int> octree = p.OcTree;
+            PointOctree octree = p.OcTree;
+
+            //void GetDataFromResult(Point[] points, bool quad, out ComputeBuffer cbP, out ComputeBuffer cbC, out ComputeBuffer cbN)
+            //{
+            //    cbP = new ComputeBuffer(points.Length, 3 * sizeof(float));
+            //    cbC = new ComputeBuffer(points.Length, sizeof(int));
+            //    cbN = quad ? new ComputeBuffer(points.Length, 3 * sizeof(float)) : null;
+
+            //    Vector3[] p = new Vector3[points.Length];
+            //    int[] c = new int[points.Length];
+            //    Vector3[] n = quad ? new Vector3[points.Length] : null;
+
+            //    for(int i = 0; i < points.Length; i++)
+            //    {
+            //        p[i] = points[i].position;
+            //        c[i] = points[i].color;
+            //        if (quad) n[i] = points[i].normal;
+            //    }
+
+            //    cbP.SetData(p);
+            //    cbC.SetData(c);
+
+            //    if (quad) cbN.SetData(n);
+
+            //}
 
             while (p.running)
             {
-                Vector3 cameraPosition;
-                Vector3 cameraDirection;
                 Plane[] frustumPlanes;
+                Point[] points;
+                
                 bool quad;
                 float cubeSize;
+                int maxPoints;
 
                 lock (p)
                 {
-                    cameraPosition = p.cameraPosition;
-                    cameraDirection = p.cameraDirection;
                     frustumPlanes = p.frustumPlanes;
                     quad = p.quad;
                     cubeSize = p.quadSize;
+                    maxPoints = p.maxPointsToRender;
                 }
 
-                var (colors, points) = octree.GetVisiblePoints(frustumPlanes);
+                if (quad)
+                    points = octree.GetVisibleQuads(frustumPlanes, cubeSize, maxPoints);
+                else
+                    points = octree.GetVisiblePoints(frustumPlanes, maxPoints);
+
+                Vector3[] visiblePoints = new Vector3[points.Length];
+                int[] visibleColors = new int[points.Length];
+                Vector3[] visibleNormals = quad ? new Vector3[points.Length] : null;
+
+                for(int i = 0; i < points.Length; i++)
+                {
+                    visiblePoints[i] = points[i].position;
+                    visibleColors[i] = points[i].color;
+                    if (quad) visibleNormals[i] = points[i].normal;
+                }
 
                 lock (p)
                 {
-                    p.pointsColorsToRender = colors;
-                    p.pointsToRender = points;
-                }           
+                    p.pointsToRender = visiblePoints;
+                    p.pointsColorsToRender = visibleColors;
+                    p.normalsToRender = visibleNormals;
+                    p.lastUpdate = DateTime.Now;
+                }
+                //ComputeBuffer visibleP;
+                //ComputeBuffer visibleC;
+                //ComputeBuffer visibleN;
+
+                //GetDataFromResult(points, quad, out visibleP, out visibleC, out visibleN);
+
+                //lock (p)
+                //{
+                //    if (p.p != null) p.p.Release();
+                //    if (p.c != null) p.c.Release();
+                //    if (p.n != null) p.n.Release();
+
+                //    p.p = visibleP;
+                //    p.c = visibleC;
+                //    p.n = visibleN;
+                //    p.lastUpdate = DateTime.Now;
+                //}
 
             }
         }

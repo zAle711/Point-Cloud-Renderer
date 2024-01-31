@@ -10,22 +10,29 @@ namespace PointCloudVR
 
         private MeshTopology topology;
 
+        private Shader point;
+        private Shader quad;
+
         private ComputeBuffer pointsBuffer;
         private ComputeBuffer colorsBuffer;
         private ComputeBuffer normalsBuffer;
         
         public PointCloudRenderer()
         {
-            topology = MeshTopology.Quads;
-            //pointMaterial = new Material(Shader.Find("Custom/MyDefaultPoint"));
-            pointMaterial = new Material(Shader.Find("Unlit/CubeShader"));
+            topology = MeshTopology.Points;
+
+            point = Shader.Find("Unlit/PointShader");
+            quad = Shader.Find("Unlit/QuadShader");
+            
+            pointMaterial = new Material(point);
         }
 
         private void PrepareMaterial()
         {
             pointMaterial.SetBuffer("_Positions", pointsBuffer);
             pointMaterial.SetBuffer("_Colors", colorsBuffer);
-            pointMaterial.SetBuffer("_Normals", normalsBuffer);  
+            
+            if (topology == MeshTopology.Quads) pointMaterial.SetBuffer("_Normals", normalsBuffer);  
         }
 
         public void Render()
@@ -38,6 +45,27 @@ namespace PointCloudVR
             pointMaterial.SetPass(0);
             Graphics.DrawProceduralNow(topology, totalPoints, 1);
         }
+        //public void SetData(ComputeBuffer p, ComputeBuffer c, ComputeBuffer n)
+        //{
+        //    pointsBuffer.Release();
+        //    pointsBuffer = p;
+        //    colorsBuffer.Release();
+        //    colorsBuffer = c;
+        //    normalsBuffer.Release();
+        //    normalsBuffer = n;
+
+        //    PrepareMaterial();
+        //}
+
+        //public void SetData(ComputeBuffer p, ComputeBuffer c)
+        //{
+        //    pointsBuffer.Release();
+        //    pointsBuffer = p;
+        //    colorsBuffer.Release();
+        //    colorsBuffer = c;
+
+        //    PrepareMaterial();
+        //}
 
         public void SetData(Vector3[] points, int[] colors, Vector3[] normals)
         {
@@ -60,7 +88,7 @@ namespace PointCloudVR
 
         private void SetPoints(Vector3[] points)
         {
-            if (points.Length == 0) return;
+            if (points == null || points.Length == 0) return;
 
             if (pointsBuffer != null) pointsBuffer.Release();
 
@@ -71,7 +99,7 @@ namespace PointCloudVR
 
         private void SetColors(int[] colors)
         {
-            if (colors.Length == 0) return;
+            if (colors == null || colors.Length == 0) return;
 
             if (colorsBuffer != null) colorsBuffer.Release();
 
@@ -81,7 +109,7 @@ namespace PointCloudVR
 
         private void SetNormals(Vector3[] normals)
         {
-            if (normals.Length == 0) return;
+            if (normals == null || normals.Length == 0) return;
 
             if (normalsBuffer != null) normalsBuffer.Release();
 
@@ -95,9 +123,11 @@ namespace PointCloudVR
             {
                 case RenderMode.POINT:
                     topology = MeshTopology.Points;
+                    pointMaterial = new Material(point);
                     break;
                 case RenderMode.CUBE:
                     topology = MeshTopology.Quads;
+                    pointMaterial = new Material(quad);
                     break;
                 default:
                     break;
