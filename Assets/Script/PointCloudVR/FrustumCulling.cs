@@ -15,7 +15,7 @@ namespace PointCloudVR
     {
         
         public KDTree KDTree;
-        public PointOctree<Vector3> OcTree;
+        public PointOctree<int> OcTree;
         //Frustum Culling Params
         public Plane[] frustumPlanes;
         public Bounds[] bounds;
@@ -59,7 +59,7 @@ namespace PointCloudVR
         Thread thread;
         FrustumParams frustumParams;
 
-        public FrustumCulling(PointOctree<Vector3> OcTree ,KDTree KDTree, float size, int maxPointsToRender)
+        public FrustumCulling(PointOctree<int> OcTree ,KDTree KDTree, float size, int maxPointsToRender)
         {
             frustumParams = new FrustumParams();
             frustumParams.OcTree = OcTree;
@@ -166,7 +166,7 @@ namespace PointCloudVR
 
             FrustumParams p = (FrustumParams)obj;
             KDTree kDTree = p.KDTree;
-            PointOctree<Vector3> octree = p.OcTree;
+            PointOctree<int> octree = p.OcTree;
             KDQuery query = new KDQuery();
             Stopwatch stopwatch = new Stopwatch();
 
@@ -203,11 +203,12 @@ namespace PointCloudVR
 
                 } else
                 {
-                    Vector3[] visiblePoints = octree.GetVisiblePoints(frustumPlanes);
+                    var (colors, points) = octree.GetVisiblePoints(frustumPlanes);
 
                     lock (p)
                     {
-                        p.pointsToRender = visiblePoints;
+                        p.pointsColorsToRender = colors;
+                        p.pointsToRender = points;
                     }
                 }
 

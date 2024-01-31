@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using Unity.Mathematics;
 using UnityEngine;
+using System.Linq;
 
 namespace PointCloudVR
 {
@@ -105,6 +106,75 @@ namespace PointCloudVR
             }
 
             return true;
+
+        }
+
+        public static (Vector3[], int[]) GetMostVisibleFaceOfCube(Vector3 point, int color, float size, Vector3 cameraDirection)
+        {
+
+            float[] directions = new float[6] { Vector3.Dot(cameraDirection, Vector3.forward), Vector3.Dot(cameraDirection, Vector3.back), Vector3.Dot(cameraDirection, Vector3.down), Vector3.Dot(cameraDirection, Vector3.up), Vector3.Dot(cameraDirection, Vector3.right), Vector3.Dot(cameraDirection, Vector3.left) };
+
+            float max = directions.Max();
+
+            Vector3[] points = new Vector3[4];
+            int[] colors = new int[4];
+
+            switch (Array.IndexOf(directions, max))
+            {
+                case 0:
+                    points[0] = new Vector3(point.x - size, point.y - size, point.z - size);
+                    points[1] = new Vector3(point.x - size, point.y + size, point.z - size);
+                    points[2] = new Vector3(point.x + size, point.y + size, point.z - size);
+                    points[3] = new Vector3(point.x + size, point.y - size, point.z - size);
+                    break;
+                case 1:
+                    points[0] = new Vector3(point.x + size, point.y - size, point.z + size);
+                    points[1] = new Vector3(point.x + size, point.y + size, point.z + size);
+                    points[2] = new Vector3(point.x - size, point.y + size, point.z + size);
+                    points[3] = new Vector3(point.x - size, point.y - size, point.z + size);
+                    break;
+                case 2:
+                    points[0] = new Vector3(point.x - size, point.y + size, point.z + size);
+                    points[1] = new Vector3(point.x + size, point.y + size, point.z + size);
+                    points[2] = new Vector3(point.x + size, point.y + size, point.z - size);
+                    points[3] = new Vector3(point.x - size, point.y + size, point.z - size);
+                    break;
+                case 3:
+                    points[0] = new Vector3(point.x + size, point.y - size, point.z - size);
+                    points[1] = new Vector3(point.x + size, point.y - size, point.z + size);
+                    points[2] = new Vector3(point.x - size, point.y - size, point.z + size);
+                    points[3] = new Vector3(point.x - size, point.y - size, point.z - size);
+                    break;
+                case 4:
+                    points[0] = new Vector3(point.x - size, point.y - size, point.z + size);
+                    points[1] = new Vector3(point.x - size, point.y + size, point.z + size);
+                    points[2] = new Vector3(point.x - size, point.y + size, point.z - size);
+                    points[3] = new Vector3(point.x - size, point.y - size, point.z - size);
+                    break;
+                case 5:
+                    points[0] = new Vector3(point.x + size, point.y + size, point.z + size);
+                    points[1] = new Vector3(point.x + size, point.y - size, point.z + size);
+                    points[2] = new Vector3(point.x + size, point.y - size, point.z - size);
+                    points[3] = new Vector3(point.x + size, point.y + size, point.z - size);
+                    break;
+            }
+
+            for (int i = 0; i < 4; i++)
+            {
+                colors[i] = color;
+            }
+
+            return (points, colors);
+
+            //float forward = Vector3.Dot(cameraDirection, Vector3.forward);
+            //float back = Vector3.Dot(cameraDirection, Vector3.back);
+            //float down = Vector3.Dot(cameraDirection, Vector3.down);
+            //float up = Vector3.Dot(cameraDirection, Vector3.up);
+            //float right = Vector3.Dot(cameraDirection, Vector3.right);
+            //float left = Vector3.Dot(cameraDirection, Vector3.left);
+
+
+
 
         }
 

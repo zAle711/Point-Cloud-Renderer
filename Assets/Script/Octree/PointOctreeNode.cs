@@ -145,21 +145,22 @@ public class PointOctreeNode<T> {
 		}
 	}
 	
-	public void GetVisiblePoints(Plane[] planes, List<T> result)
+	public void GetVisiblePoints(Plane[] planes, (List<T>, List<Vector3>) result)
     {
 		if (!PointCloudVR.Util.TestPlanesAABB(planes, bounds))
         {
 			return;
         }
 
-		result.AddRange(objects.Select(o => o.Obj));
+		result.Item1.AddRange(objects.Select(o => o.Obj));
+		result.Item2.AddRange(objects.Select(o => o.Pos));
 
 		//for (int i = 0; i < objects.Count; i++)
 		//      {
 		//	result.Add(objects[i].Obj);
 		//      }
 
-		if (result.Count >= 1000000)
+		if (result.Item2.Count >= 1000000)
         {
 			return;
         }

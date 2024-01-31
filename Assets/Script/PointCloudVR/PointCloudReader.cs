@@ -48,7 +48,7 @@ namespace PointCloudVR
                     //all_points.Add(point_position);
                     int color;
 
-                    if (coords.Length == 40)
+                    if (coords.Length == 4)
                     {
                         color = int.Parse(coords[3]);
                         //all_colors.Add(color);

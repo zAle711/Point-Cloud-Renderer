@@ -128,11 +128,11 @@ public class PointOctree<T> {
 		return collidingWith.ToArray();
 	}
 
-	public T[] GetVisiblePoints(Plane[] planes)
+	public (T[], Vector3[]) GetVisiblePoints(Plane[] planes)
     {
-		List<T> visiblePoints = new List<T>();
+		(List<T>, List<Vector3>) visiblePoints = (new List<T>(), new List<Vector3>());
 		rootNode.GetVisiblePoints(planes, visiblePoints);
-		return visiblePoints.ToArray();
+		return (visiblePoints.Item1.ToArray(), visiblePoints.Item2.ToArray());
 
 	}
 

@@ -32,7 +32,7 @@ namespace PointCloudVR
         private PointCloudRenderer pointCloudRenderer;
         //Data structure to store Points
         private KDTree KdTree;
-        private PointOctree<Vector3> Octree;
+        private PointOctree<int> Octree;
 
         private GameObject floor;
         private TextMeshProUGUI textLabel;
@@ -50,11 +50,11 @@ namespace PointCloudVR
             PointCloudReader.ReadFileBuild(out Vector3[] pointCloud, out int[] pointCloudColors, fileName);
             
             KdTree = new KDTree(pointCloud, pointCloudColors, 32);
-            Octree = new PointOctree<Vector3>(10, new Vector3(0, 5, 0), 1f);
+            Octree = new PointOctree<int>(10, new Vector3(0, 5, 0), 1f);
 
             for (int i = 0; i < pointCloud.Length; i++)
             {
-                Octree.Add(pointCloud[i], pointCloud[i]);
+                Octree.Add(pointCloudColors[i], pointCloud[i]);
             }
 
             Debug.Log($"Punti caricati: {pointCloud.Length}");

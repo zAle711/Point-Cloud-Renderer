@@ -96,7 +96,7 @@ namespace DataStructures.ViliWonka.KDTree
 
                         if (quad)
                         {
-                            var (quadPoints, quadColors) = Util.GetVisibleFacesOfCube(points[index], colors[index], cubeSize, cameraDirection);
+                            var (quadPoints, quadColors) = Util.GetMostVisibleFaceOfCube(points[index], colors[index], cubeSize, cameraDirection);
                             p.AddRange(quadPoints);
                             c.AddRange(quadColors);
                         }
