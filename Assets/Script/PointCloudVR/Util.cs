@@ -24,65 +24,6 @@ namespace PointCloudVR
 
     public static class Util
     {
-        public static void ReadFile(out Vector3[] points, out int[] colors, string fileName)
-        {
-            string path = string.Format("Assets/Point Clouds txt/{0}.txt", fileName);
-            StreamReader inp_stm = new StreamReader(path);
-            bool InvertYZ = true;
-            int offsetY = InvertYZ ? 2 : 1;
-            int offsetZ = InvertYZ ? 1 : 2;
-
-            List<Vector3> all_points = new List<Vector3>();
-            List<int> all_colors = new List<int>();
-            
-            while (!inp_stm.EndOfStream)
-            {
-                string inp_ln = inp_stm.ReadLine();
-                string[] coords = inp_ln.Split();
-
-                //if (!coords[0].Contains(".") || !coords[1].Contains(".") || !coords[2].Contains(".")) continue;
-
-                try
-                {
-                    float x = float.Parse(coords[0], CultureInfo.InvariantCulture);
-                    float y = float.Parse(coords[offsetY], CultureInfo.InvariantCulture);
-                    float z = float.Parse(coords[offsetZ], CultureInfo.InvariantCulture);
-
-                    Vector3 point_position = new Vector3(x, y, z);
-                    //all_points.Add(point_position);
-                    int color;
-
-                    if (coords.Length == 40)
-                    {
-                        color = int.Parse(coords[3]);
-                        //all_colors.Add(color);
-                    } else
-                    {
-                        float normalizedY = Mathf.InverseLerp(0f, 4f, point_position.y);
-                        Color c = Color.Lerp(Color.blue, Color.green, normalizedY);
-                        color = encodeColor((int)(c.r * 255), (int)(c.g * 255), (int)(c.b * 255));
-                    }
-
-                    all_points.Add(point_position);
-                    all_colors.Add(color);
-                    //var (quadPoints, quadColors) = GetVisibleFacesOfCube(point_position, color, 0.05f, new Vector3(0,0,0));
-
-                    //all_points.AddRange(quadPoints);
-                    //all_colors.AddRange(quadColors);
-
-
-                }
-                catch (Exception e)
-                {
-                    Debug.Log(e.Message);
-                }
-
-            }
-
-            points = all_points.ToArray();
-            colors = all_colors.ToArray();
-        }
-
         public static int encodeColor(int r, int g, int b)
         {
             int encoded = r << 16;
@@ -109,177 +50,76 @@ namespace PointCloudVR
 
         }
 
-        public static (Vector3[], int[]) GetMostVisibleFaceOfCube(Vector3 point, int color, float size, Vector3 cameraDirection)
+        public static Point[] ZFace(Vector3 point, int color, Vector3 normal, float size)
         {
+            Point[] p = new Point[4];
 
-            float[] directions = new float[6] { Vector3.Dot(cameraDirection, Vector3.forward), Vector3.Dot(cameraDirection, Vector3.back), Vector3.Dot(cameraDirection, Vector3.down), Vector3.Dot(cameraDirection, Vector3.up), Vector3.Dot(cameraDirection, Vector3.right), Vector3.Dot(cameraDirection, Vector3.left) };
+            Vector3 bottomLeft = new Vector3(point.x + size, point.y - size, point.z);
+            Vector3 topLeft = new Vector3(point.x + size, point.y + size, point.z);
+            Vector3 topRight = new Vector3(point.x - size, point.y + size, point.z);
+            Vector3 bottomRight = new Vector3(point.x - size, point.y - size, point.z);
 
-            float max = directions.Max();
+            p[0] = new Point(bottomLeft, color, normal);
+            p[1] = new Point(topLeft, color, normal);
+            p[2] = new Point(topRight, color, normal);
+            p[3] = new Point(bottomRight, color, normal);
 
-            Vector3[] points = new Vector3[4];
-            int[] colors = new int[4];
-
-            switch (Array.IndexOf(directions, max))
-            {
-                case 0:
-                    points[0] = new Vector3(point.x - size, point.y - size, point.z - size);
-                    points[1] = new Vector3(point.x - size, point.y + size, point.z - size);
-                    points[2] = new Vector3(point.x + size, point.y + size, point.z - size);
-                    points[3] = new Vector3(point.x + size, point.y - size, point.z - size);
-                    break;
-                case 1:
-                    points[0] = new Vector3(point.x + size, point.y - size, point.z + size);
-                    points[1] = new Vector3(point.x + size, point.y + size, point.z + size);
-                    points[2] = new Vector3(point.x - size, point.y + size, point.z + size);
-                    points[3] = new Vector3(point.x - size, point.y - size, point.z + size);
-                    break;
-                case 2:
-                    points[0] = new Vector3(point.x - size, point.y + size, point.z + size);
-                    points[1] = new Vector3(point.x + size, point.y + size, point.z + size);
-                    points[2] = new Vector3(point.x + size, point.y + size, point.z - size);
-                    points[3] = new Vector3(point.x - size, point.y + size, point.z - size);
-                    break;
-                case 3:
-                    points[0] = new Vector3(point.x + size, point.y - size, point.z - size);
-                    points[1] = new Vector3(point.x + size, point.y - size, point.z + size);
-                    points[2] = new Vector3(point.x - size, point.y - size, point.z + size);
-                    points[3] = new Vector3(point.x - size, point.y - size, point.z - size);
-                    break;
-                case 4:
-                    points[0] = new Vector3(point.x - size, point.y - size, point.z + size);
-                    points[1] = new Vector3(point.x - size, point.y + size, point.z + size);
-                    points[2] = new Vector3(point.x - size, point.y + size, point.z - size);
-                    points[3] = new Vector3(point.x - size, point.y - size, point.z - size);
-                    break;
-                case 5:
-                    points[0] = new Vector3(point.x + size, point.y + size, point.z + size);
-                    points[1] = new Vector3(point.x + size, point.y - size, point.z + size);
-                    points[2] = new Vector3(point.x + size, point.y - size, point.z - size);
-                    points[3] = new Vector3(point.x + size, point.y + size, point.z - size);
-                    break;
-            }
-
-            for (int i = 0; i < 4; i++)
-            {
-                colors[i] = color;
-            }
-
-            return (points, colors);
-
-            //float forward = Vector3.Dot(cameraDirection, Vector3.forward);
-            //float back = Vector3.Dot(cameraDirection, Vector3.back);
-            //float down = Vector3.Dot(cameraDirection, Vector3.down);
-            //float up = Vector3.Dot(cameraDirection, Vector3.up);
-            //float right = Vector3.Dot(cameraDirection, Vector3.right);
-            //float left = Vector3.Dot(cameraDirection, Vector3.left);
-
-
-
-
+            return p;
         }
 
-        public static (Vector3[], int[]) GetVisibleFacesOfCube(Vector3 point, int color, float size, Vector3 cameraDirection)
+        public static Point[] YFace(Vector3 point, int color, Vector3 normal, float size)
         {
-            float offset = 0.15f;
-            List<Vector3> pointsList = new List<Vector3>();
+            Point[] p = new Point[4];
 
-            //Debug.Log($"Camera direction: {cameraDirection}, Direction: {Vector3.forward} = Dot: {Vector3.Dot(cameraDirection, Vector3.forward)}");
+            Vector3 bottomLeft = new Vector3(point.x + size, point.y , point.z - size);
+            Vector3 topLeft = new Vector3(point.x - size, point.y, point.z - size);
+            Vector3 topRight = new Vector3(point.x - size, point.y, point.z + size);
+            Vector3 bottomRight = new Vector3(point.x + size, point.y, point.z + size);
 
-            if (Vector3.Dot(cameraDirection, Vector3.forward) + offset >= 0)
-            {
-                //FRONT
-                //points[0] = new Vector3(point.x - size, point.y - size, point.z - size);
-                //points[1] = new Vector3(point.x - size, point.y + size, point.z - size);
-                //points[2] = new Vector3(point.x + size, point.y + size, point.z - size);
-                //points[3] = new Vector3(point.x + size, point.y - size, point.z - size);
+            p[0] = new Point(bottomLeft, color, normal);
+            p[1] = new Point(topLeft, color, normal);
+            p[2] = new Point(topRight, color, normal);
+            p[3] = new Point(bottomRight, color, normal);
 
-                pointsList.Add(new Vector3(point.x - size, point.y - size, point.z - size));
-                pointsList.Add(new Vector3(point.x - size, point.y + size, point.z - size));
-                pointsList.Add(new Vector3(point.x + size, point.y + size, point.z - size));
-                pointsList.Add(new Vector3(point.x + size, point.y - size, point.z - size));
-            }
+            return p;
+        }
 
-            if (Vector3.Dot(cameraDirection, Vector3.back) + offset >= 0)
-            {
-                //BACK
-                //points[7] = new Vector3(point.x - size, point.y - size, point.z + size);
-                //points[6] = new Vector3(point.x - size, point.y + size, point.z + size);
-                //points[5] = new Vector3(point.x + size, point.y + size, point.z + size);
-                //points[4] = new Vector3(point.x + size, point.y - size, point.z + size);
 
-                pointsList.Add(new Vector3(point.x + size, point.y - size, point.z + size));
-                pointsList.Add(new Vector3(point.x + size, point.y + size, point.z + size));
-                pointsList.Add(new Vector3(point.x - size, point.y + size, point.z + size));
-                pointsList.Add(new Vector3(point.x - size, point.y - size, point.z + size));
-                
-            }
+        public static Point[] XFace(Vector3 point, int color, Vector3 normal, float size)
+        {
+            Point[] p = new Point[4];
 
-            if (Vector3.Dot(cameraDirection, Vector3.down) + offset >= 0)
-            {
-                //TOP
-                //points[11] = new Vector3(point.x - size, point.y + size, point.z - size);
-                //points[10] = new Vector3(point.x + size, point.y + size, point.z - size);
-                //points[8] = new Vector3(point.x - size, point.y + size, point.z + size);
-                //points[9] = new Vector3(point.x + size, point.y + size, point.z + size);
+            Vector3 bottomLeft = new Vector3(point.x, point.y - size, point.z - size);
+            Vector3 topLeft = new Vector3(point.x, point.y + size, point.z - size);
+            Vector3 topRight = new Vector3(point.x, point.y + size, point.z + size);
+            Vector3 bottomRight = new Vector3(point.x, point.y - size, point.z + size);
 
-                pointsList.Add(new Vector3(point.x - size, point.y + size, point.z + size));
-                pointsList.Add(new Vector3(point.x + size, point.y + size, point.z + size));
-                pointsList.Add(new Vector3(point.x + size, point.y + size, point.z - size));
-                pointsList.Add(new Vector3(point.x - size, point.y + size, point.z - size));
-            }
-            if (Vector3.Dot(cameraDirection, Vector3.up) + offset >= 0)
-            {
-                //BOTTOM
-                //points[15] = new Vector3(point.x - size, point.y - size, point.z - size);
-                //points[12] = new Vector3(point.x + size, point.y - size, point.z - size);
-                //points[14] = new Vector3(point.x - size, point.y - size, point.z + size);
-                //points[13] = new Vector3(point.x + size, point.y - size, point.z + size);
-
-                pointsList.Add(new Vector3(point.x + size, point.y - size, point.z - size));
-                pointsList.Add(new Vector3(point.x + size, point.y - size, point.z + size));
-                pointsList.Add(new Vector3(point.x - size, point.y - size, point.z + size));
-                pointsList.Add(new Vector3(point.x - size, point.y - size, point.z - size));
-
-            }
-
-            if (Vector3.Dot(cameraDirection, Vector3.right) + offset >= 0)
-            {
-                //LEFT
-                //points[19] = new Vector3(point.x - size, point.y - size, point.z - size);
-                //points[18] = new Vector3(point.x - size, point.y + size, point.z - size);
-                //points[16] = new Vector3(point.x - size, point.y - size, point.z + size);
-                //points[17] = new Vector3(point.x - size, point.y + size, point.z + size);
-
-                pointsList.Add(new Vector3(point.x - size, point.y - size, point.z + size));
-                pointsList.Add(new Vector3(point.x - size, point.y + size, point.z + size));
-                pointsList.Add(new Vector3(point.x - size, point.y + size, point.z - size));
-                pointsList.Add(new Vector3(point.x - size, point.y - size, point.z - size));
-            }
-            if (Vector3.Dot(cameraDirection, Vector3.left) + offset >= 0)
-            {
-                //RIGHT
-                //points[23] = new Vector3(point.x + size, point.y + size, point.z - size);
-                //points[22] = new Vector3(point.x + size, point.y - size, point.z - size);
-                //points[20] = new Vector3(point.x + size, point.y + size, point.z + size);
-                //points[21] = new Vector3(point.x + size, point.y - size, point.z + size);
-
-                pointsList.Add(new Vector3(point.x + size, point.y + size, point.z + size));
-                pointsList.Add(new Vector3(point.x + size, point.y - size, point.z + size));
-                pointsList.Add(new Vector3(point.x + size, point.y - size, point.z - size));
-                pointsList.Add(new Vector3(point.x + size, point.y + size, point.z - size));
-            }
-
-            Vector3[] points = pointsList.ToArray();
-            int[] colors = new int[points.Length]; 
-           
+            p[0] = new Point(bottomLeft, color, normal);
+            p[1] = new Point(topLeft, color, normal);
+            p[2] = new Point(topRight, color, normal);
+            p[3] = new Point(bottomRight, color, normal);
             
+            return p;
+        }
 
-            for (int i = 0; i < colors.Length; i++)
-            {
-                colors[i] = color;
-            }
+        public static Vector3 GetNormalVector(float x, float y, float z)
+        {
+            float xa = Mathf.Abs(x);
+            float ya = Mathf.Abs(y);
+            float za = Mathf.Abs(z);
 
-            return (points, colors);
+            float max = Mathf.Max(xa, MathF.Max(ya, za));
+
+            Vector3 normal = Vector3.zero;
+
+            if (max == xa)
+                normal.x = Mathf.RoundToInt(x);
+            else if (max == ya)
+                normal.y = Mathf.RoundToInt(y);
+            else if (max == za)
+                normal.z = Mathf.RoundToInt(z);
+            
+            return normal;
         }
 
     }

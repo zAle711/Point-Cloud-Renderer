@@ -277,6 +277,7 @@ GameObject:
   m_Component:
   - component: {fileID: 584836289}
   - component: {fileID: 584836288}
+  - component: {fileID: 584836290}
   m_Layer: 0
   m_Name: PointCloud
   m_TagString: Untagged
@@ -296,9 +297,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cd393e4d157ff784badb215175a104e5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  fileName: corridoio.txt
+  fileName: corridoio_with_normals.pcd
   renderMode: 0
-  dataStructure: 0
   cubeSize: 0.05
   maxPointsToRender: 5000000
   boundSize: 0.01
@@ -317,6 +317,21 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &584836290
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 584836287}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed9c17f209a1f0342849594f3d5af731, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  fileName: corridoio_with_normals.pcd
+  cubeSize: 0.025
+  rendering: 0
 --- !u!1001 &587176269
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1336,10 +1351,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0940ce37e73d4c949ab786ae4d94ea45, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  points: []
-  colors: 
-  cameraPosition: {x: 0, y: 0, z: 0}
-  cameraDirection: {x: 0, y: 0, z: 0}
 --- !u!4 &2125923031 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 488160, guid: d9809c5e8418bb047bf2c8ba1d1a2cec, type: 3}

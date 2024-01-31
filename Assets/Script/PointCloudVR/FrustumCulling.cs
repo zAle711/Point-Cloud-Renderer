@@ -1,4 +1,3 @@
-using DataStructures.ViliWonka.KDTree;
 using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
@@ -6,23 +5,15 @@ using Stopwatch = System.Diagnostics.Stopwatch;
 
 namespace PointCloudVR
 {
-    public enum DataStructure
-    {
-        KDTREE,
-        OCTREE
-    }
     class FrustumParams
     {
         
-        public KDTree KDTree;
         public PointOctree<int> OcTree;
         //Frustum Culling Params
         public Plane[] frustumPlanes;
         public Bounds[] bounds;
         public float boundSize;
         public int maxPointsToRender;
-
-        public DataStructure dataStructure;
 
         //Params To Render Only visible Cube Faces
         public Vector3 cameraPosition;
@@ -40,45 +31,18 @@ namespace PointCloudVR
 
     }
 
-    public class FrustumQueryResult
-    {
-        public Vector3[] pointsToRender;
-        public int[] colorPointsToRender;
-        public GizmoBox[] gizmoBoxes;
-
-        public FrustumQueryResult(List<Vector3> pointsToRender, List<int> colorPointsToRender, List<GizmoBox> gizmoBoxes)
-        {
-            this.pointsToRender = pointsToRender.ToArray();
-            this.colorPointsToRender = colorPointsToRender.ToArray();
-            this.gizmoBoxes = gizmoBoxes.ToArray();
-        }
-    }
-
     public class FrustumCulling
     {
         Thread thread;
         FrustumParams frustumParams;
 
-        public FrustumCulling(PointOctree<int> OcTree ,KDTree KDTree, float size, int maxPointsToRender)
+        public FrustumCulling(PointOctree<int> OcTree , float size, int maxPointsToRender)
         {
             frustumParams = new FrustumParams();
             frustumParams.OcTree = OcTree;
-            frustumParams.KDTree = KDTree;
             frustumParams.boundSize = size;
-            frustumParams.bounds = CreateBounds();
             frustumParams.maxPointsToRender = maxPointsToRender;
             thread = new Thread(new ParameterizedThreadStart(ComputeInsidePoints));
-        }
-
-        private Bounds[] CreateBounds()
-        {
-            Bounds[] bounds = new Bounds[frustumParams.KDTree.Points.Length];
-            Vector3 size = new Vector3(frustumParams.boundSize, frustumParams.boundSize, frustumParams.boundSize);
-            for (int i = 0; i < frustumParams.KDTree.Points.Length; i++)
-            {
-                bounds[i] = new Bounds(frustumParams.KDTree.Points[i], size);
-            }
-            return bounds;
         }
 
         public void SetCamera(Camera camera, Matrix4x4 localWorldMatrix)
@@ -145,31 +109,18 @@ namespace PointCloudVR
             }
         }
 
-        public (Vector3[], int[], GizmoBox[]) GetData()
+        public (Vector3[], int[]) GetData()
         {
             lock (frustumParams)
             {
-                return (frustumParams.pointsToRender, frustumParams.pointsColorsToRender, frustumParams.gizmoBoxes);
-            }
-        }
-
-        public void SetDataStructure(DataStructure structure)
-        {
-            lock (frustumParams)
-            {
-                frustumParams.dataStructure = structure;
+                return (frustumParams.pointsToRender, frustumParams.pointsColorsToRender);
             }
         }
 
         private void ComputeInsidePoints(object obj)
         {
-
             FrustumParams p = (FrustumParams)obj;
-            KDTree kDTree = p.KDTree;
             PointOctree<int> octree = p.OcTree;
-            KDQuery query = new KDQuery();
-            Stopwatch stopwatch = new Stopwatch();
-
 
             while (p.running)
             {
@@ -178,7 +129,6 @@ namespace PointCloudVR
                 Plane[] frustumPlanes;
                 bool quad;
                 float cubeSize;
-                DataStructure dataStructure;
 
                 lock (p)
                 {
@@ -187,32 +137,15 @@ namespace PointCloudVR
                     frustumPlanes = p.frustumPlanes;
                     quad = p.quad;
                     cubeSize = p.quadSize;
-                    dataStructure = p.dataStructure;
-                }
-              
-                if (dataStructure == DataStructure.KDTREE)
-                {
-                    FrustumQueryResult res = query.Check(kDTree, cameraPosition, cameraDirection, frustumPlanes, p.maxPointsToRender, quad, cubeSize);
-
-                    lock (p)
-                    {
-                        p.pointsToRender = res.pointsToRender;
-                        p.pointsColorsToRender = res.colorPointsToRender;
-                        p.gizmoBoxes = res.gizmoBoxes;
-                    }
-
-                } else
-                {
-                    var (colors, points) = octree.GetVisiblePoints(frustumPlanes);
-
-                    lock (p)
-                    {
-                        p.pointsColorsToRender = colors;
-                        p.pointsToRender = points;
-                    }
                 }
 
-                
+                var (colors, points) = octree.GetVisiblePoints(frustumPlanes);
+
+                lock (p)
+                {
+                    p.pointsColorsToRender = colors;
+                    p.pointsToRender = points;
+                }           
 
             }
         }

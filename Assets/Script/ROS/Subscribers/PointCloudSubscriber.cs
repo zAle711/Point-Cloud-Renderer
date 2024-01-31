@@ -6,7 +6,7 @@ using PoseArrayMsg = RosMessageTypes.Geometry.PoseArrayMsg;
 public class PointCloudSubscriber : MonoBehaviour
 {
     private ROSConnection rosConnection;
-    private string topicName;
+    public string topicName;
 
     private PoseArrayMsg lastMessage;
     public bool newMessage = false;
@@ -15,7 +15,6 @@ public class PointCloudSubscriber : MonoBehaviour
     void Start()
     {
         rosConnection = ROSConnection.GetOrCreateInstance();
-        topicName = VoxelConfiguration.Configuration().TopicName;
         if (topicName != "") rosConnection.Subscribe<PoseArrayMsg>(topicName, OnMessageReceived);
     }
 

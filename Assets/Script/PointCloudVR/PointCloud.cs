@@ -1,8 +1,8 @@
 using PointCloudVR;
-using DataStructures.ViliWonka.KDTree;
 using TMPro;
 using UnityEditor;
 using UnityEngine;
+using System.Collections.Generic;
 
 namespace PointCloudVR
 {
@@ -16,26 +16,30 @@ namespace PointCloudVR
     {
         public string fileName = "test.txt";
         public RenderMode renderMode;
-        public DataStructure dataStructure;
-        public float cubeSize = 0.05f;
+        public float cubeSize = 0.025f;
 
         private Camera cam;
 
         public int maxPointsToRender = 100000;
         public float boundSize = 0.5f;
         
-        //KDTree Partitions
+        //OCtree Partitions
         private GizmoBox[] gizmoBoxes;
 
         //Objects to Render only visible points
         private FrustumCulling frustumCulling;
         private PointCloudRenderer pointCloudRenderer;
+        
         //Data structure to store Points
-        private KDTree KdTree;
         private PointOctree<int> Octree;
 
         private GameObject floor;
         private TextMeshProUGUI textLabel;
+
+        private Point[] pointCloud;
+        private Vector3[] points;
+        private int[] colors;
+        private Vector3[] normals;
 
         private void Awake()
         {
@@ -47,17 +51,16 @@ namespace PointCloudVR
         {
             //Read PointCloud from file and create KDTree to store points.
             Debug.Log(System.IO.Path.Combine(Application.streamingAssetsPath, fileName));
-            PointCloudReader.ReadFileBuild(out Vector3[] pointCloud, out int[] pointCloudColors, fileName);
+            pointCloud = PointCloudReader.ReadFileWithNormals(out points, out colors, out normals, fileName, cubeSize);
             
-            KdTree = new KDTree(pointCloud, pointCloudColors, 32);
-            Octree = new PointOctree<int>(10, new Vector3(0, 5, 0), 1f);
+            //Octree = new PointOctree<int>(10, new Vector3(0, 5, 0), 1f);
 
-            for (int i = 0; i < pointCloud.Length; i++)
-            {
-                Octree.Add(pointCloudColors[i], pointCloud[i]);
-            }
+            //for (int i = 0; i < pointCloud.Length; i++)
+            //{
+            //    Octree.Add(pointCloudColors[i], pointCloud[i]);
+            //}
 
-            Debug.Log($"Punti caricati: {pointCloud.Length}");
+            //Debug.Log($"Punti caricati: {pointCloud.Length}");
 
             cam = Camera.main;
             floor = GameObject.FindGameObjectWithTag("Floor");
@@ -66,11 +69,11 @@ namespace PointCloudVR
             textLabel.text = $"Punti dal file: {pointCloud.Length}";
 
             InizializeFloor();
-            frustumCulling = new FrustumCulling(Octree, KdTree, boundSize, maxPointsToRender);
-            frustumCulling.SetCamera(cam, transform.localToWorldMatrix);
-            frustumCulling.Start();
+            //frustumCulling = new FrustumCulling(Octree, boundSize, maxPointsToRender);
+            //frustumCulling.SetCamera(cam, transform.localToWorldMatrix);
+            //frustumCulling.Start();
 
-            //pointCloudRenderer.SetData(pointCloud, pointCloudColors);
+            pointCloudRenderer.SetData(points, colors, normals);
         }
 
         private void InizializeFloor()
@@ -95,41 +98,40 @@ namespace PointCloudVR
         {
             if (frustumCulling == null) return;
 
-            var (points, colors, gizmoBoxes) = frustumCulling.GetData();
+            var (points, colors) = frustumCulling.GetData();
 
             if (points != null && colors != null)
             {
                 pointCloudRenderer.SetData(points, colors);
-                //textLabel.text = $"Punti Renderizzati: {points.Length}";
+                textLabel.text = $"Punti Renderizzati: {points.Length}";
             }
 
-            this.gizmoBoxes = gizmoBoxes;
 
         }
         // Update is called once per frame
         void Update()
         {
 
-            RetrieveData();
-            frustumCulling.SetCamera(cam, transform.localToWorldMatrix);
-            //textLabel.text = $"Punti Renderizzati: {pointCloudRenderer.GetNPoints()}";
-            pointCloudRenderer.SetWorldMatrix(transform.localToWorldMatrix);
+            //RetrieveData();
+            //frustumCulling.SetCamera(cam, transform.localToWorldMatrix);
+            ////textLabel.text = $"Punti Renderizzati: {pointCloudRenderer.GetNPoints()}";
+            //pointCloudRenderer.SetWorldMatrix(transform.localToWorldMatrix);
         }
 
 
-        private void OnDrawGizmos()
-        {
-            if (gizmoBoxes == null) return;
+        //private void OnDrawGizmos()
+        //{
+        //    if (gizmoBoxes == null) return;
 
-            Handles.color = new Color(0f, 1f, 0f, 0.5f);
+        //    Handles.color = new Color(0f, 1f, 0f, 0.5f);
 
-            for (int i = 0; i < gizmoBoxes.Length; i++)
-            {
-                Handles.DrawWireCube(gizmoBoxes[i].position + gizmoBoxes[i].size / 2, gizmoBoxes[i].size);
-            }
+        //    for (int i = 0; i < gizmoBoxes.Length; i++)
+        //    {
+        //        Handles.DrawWireCube(gizmoBoxes[i].position + gizmoBoxes[i].size / 2, gizmoBoxes[i].size);
+        //    }
 
-            Handles.color = Color.white;
-        }
+        //    Handles.color = Color.white;
+        //}
 
         private void OnRenderObject()
         {
@@ -137,17 +139,16 @@ namespace PointCloudVR
                 pointCloudRenderer.Render();
         }
 
-        private void OnValidate()
-        {
-            if (frustumCulling != null)
-            {
-                frustumCulling.SetMaxPoints(maxPointsToRender);
-                pointCloudRenderer.SetTopology(renderMode);
-                frustumCulling.SetRenderMode(renderMode);
-                frustumCulling.SetCubeSize(cubeSize);
-                frustumCulling.SetDataStructure(dataStructure);
-            }
-        }
+        //private void OnValidate()
+        //{
+        //    if (frustumCulling != null)
+        //    {
+        //        frustumCulling.SetMaxPoints(maxPointsToRender);
+        //        pointCloudRenderer.SetTopology(renderMode);
+        //        frustumCulling.SetRenderMode(renderMode);
+        //        frustumCulling.SetCubeSize(cubeSize);
+        //    }
+        //}
     }
 
 }
