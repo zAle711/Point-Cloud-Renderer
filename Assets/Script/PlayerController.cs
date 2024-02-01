@@ -8,7 +8,7 @@ public class PlayerController : MonoBehaviour
 
     private void Start()
     {
-        waypointPub = new WayPointPublisher();
+       //waypointPub = new WayPointPublisher();
     }
 
     void FireRay()
@@ -18,7 +18,7 @@ public class PlayerController : MonoBehaviour
         if (Physics.Raycast(ray, out hitData))
         {
             Debug.Log(hitData.point);
-            waypointPub.SendWaypoint(hitData.point);
+            //waypointPub.SendWaypoint(hitData.point);
         }
     }
 

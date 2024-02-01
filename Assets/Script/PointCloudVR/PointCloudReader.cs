@@ -20,6 +20,7 @@ namespace PointCloudVR
             List<Point> all_points = new List<Point>();
 
             string filePath = Path.Combine(Application.streamingAssetsPath, fileName);
+            Debug.Log($"FIle da caricare: {filePath}");
             StreamReader inp_stm = new StreamReader(filePath);
 
             int offsetY = invertXY ? 2 : 1;

@@ -13,7 +13,7 @@ namespace PointCloudVR
 
     public class PointCloud : MonoBehaviour
     {
-        public string fileName = "test.txt";
+        public string fileName = "corridoio_with_normals.pcd";
         public RenderMode renderMode;
         public float cubeSize = 0.025f;
 
@@ -60,7 +60,7 @@ namespace PointCloudVR
 
             PointCloudReader.CreateFloor(floor);
             
-            frustumCulling = new FrustumCulling(ocTree, boundSize, maxPointsToRender); 
+            frustumCulling = new FrustumCulling(ocTree, maxPointsToRender); 
             
             frustumCulling.SetCamera(cam, transform.localToWorldMatrix);
 
@@ -103,9 +103,28 @@ namespace PointCloudVR
         // Update is called once per frame
         void Update()
         {
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                RetrieveData();
+                textLabel.text = $"adsa + {Time.realtimeSinceStartup}";
+            }
+            
+            if (Input.GetKeyDown(KeyCode.P))
+            {
+                frustumCulling.Stop();
+            }
 
-            RetrieveData();
-            frustumCulling.SetCamera(cam, transform.localToWorldMatrix);
+            if (Input.GetKeyDown(KeyCode.O))
+            {
+                frustumCulling.Start();
+            }
+            
+            if (Input.GetKeyDown(KeyCode.L))
+            {
+                frustumCulling.SetCamera(cam, transform.localToWorldMatrix);
+            }
+
+            //frustumCulling.SetCamera(cam, transform.localToWorldMatrix);
             ////textLabel.text = $"Punti Renderizzati: {pointCloudRenderer.GetNPoints()}";
             //pointCloudRenderer.SetWorldMatrix(transform.localToWorldMatrix);
         }
@@ -113,7 +132,7 @@ namespace PointCloudVR
 
         private void OnDrawGizmos()
         {
-            ocTree.DrawAllBounds();
+            //ocTree.DrawAllBounds();
             //if (gizmoBoxes == null) return;
 
             //Handles.color = new Color(0f, 1f, 0f, 0.5f);

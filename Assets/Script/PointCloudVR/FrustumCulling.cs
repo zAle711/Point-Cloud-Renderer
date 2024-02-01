@@ -38,12 +38,13 @@ namespace PointCloudVR
         Thread thread;
         FrustumParams frustumParams;
 
-        public FrustumCulling(PointOctree OcTree , float size, int maxPointsToRender)
+        public FrustumCulling(PointOctree OcTree, int maxPointsToRender)
         {
             frustumParams = new FrustumParams();
             frustumParams.OcTree = OcTree;
             frustumParams.maxPointsToRender = maxPointsToRender;
             thread = new Thread(new ParameterizedThreadStart(ComputeInsidePoints));
+            thread.Priority = System.Threading.ThreadPriority.Lowest;
         }
 
         public void SetCamera(Camera camera, Matrix4x4 localWorldMatrix)
@@ -97,6 +98,9 @@ namespace PointCloudVR
 
         public void Start()
         {
+            thread = new Thread(new ParameterizedThreadStart(ComputeInsidePoints));
+            thread.Priority = System.Threading.ThreadPriority.Lowest;
+            frustumParams.running = true;
             thread.Start(frustumParams);
         }
 
@@ -105,6 +109,9 @@ namespace PointCloudVR
             lock (frustumParams)
             {
                 frustumParams.running = false;
+                frustumParams.pointsToRender = null;
+                frustumParams.pointsColorsToRender = null;
+                frustumParams.normalsToRender = null;
             }
         }
 
@@ -128,36 +135,14 @@ namespace PointCloudVR
         {
             FrustumParams p = (FrustumParams)obj;
             PointOctree octree = p.OcTree;
-
-            //void GetDataFromResult(Point[] points, bool quad, out ComputeBuffer cbP, out ComputeBuffer cbC, out ComputeBuffer cbN)
-            //{
-            //    cbP = new ComputeBuffer(points.Length, 3 * sizeof(float));
-            //    cbC = new ComputeBuffer(points.Length, sizeof(int));
-            //    cbN = quad ? new ComputeBuffer(points.Length, 3 * sizeof(float)) : null;
-
-            //    Vector3[] p = new Vector3[points.Length];
-            //    int[] c = new int[points.Length];
-            //    Vector3[] n = quad ? new Vector3[points.Length] : null;
-
-            //    for(int i = 0; i < points.Length; i++)
-            //    {
-            //        p[i] = points[i].position;
-            //        c[i] = points[i].color;
-            //        if (quad) n[i] = points[i].normal;
-            //    }
-
-            //    cbP.SetData(p);
-            //    cbC.SetData(c);
-
-            //    if (quad) cbN.SetData(n);
-
-            //}
+            List<Point> points = new List<Point>();
 
             while (p.running)
             {
                 Plane[] frustumPlanes;
-                Point[] points;
-                
+
+                points.Clear();
+
                 bool quad;
                 float cubeSize;
                 int maxPoints;
@@ -171,15 +156,15 @@ namespace PointCloudVR
                 }
 
                 if (quad)
-                    points = octree.GetVisibleQuads(frustumPlanes, cubeSize, maxPoints);
+                    octree.GetVisibleQuads(frustumPlanes, points, cubeSize, maxPoints);
                 else
-                    points = octree.GetVisiblePoints(frustumPlanes, maxPoints);
+                    octree.GetVisiblePoints(frustumPlanes, points, maxPoints);
 
-                Vector3[] visiblePoints = new Vector3[points.Length];
-                int[] visibleColors = new int[points.Length];
-                Vector3[] visibleNormals = quad ? new Vector3[points.Length] : null;
+                Vector3[] visiblePoints = new Vector3[points.Count];
+                int[] visibleColors = new int[points.Count];
+                Vector3[] visibleNormals = quad ? new Vector3[points.Count] : null;
 
-                for(int i = 0; i < points.Length; i++)
+                for(int i = 0; i < points.Count; i++)
                 {
                     visiblePoints[i] = points[i].position;
                     visibleColors[i] = points[i].color;
