@@ -152,17 +152,33 @@ public class PointOctreeNode{
 		{
 			return;
 		}
-		foreach(OctreeObject obj in objects)
-        {
-			foreach(Point p in PointCloudReader.AddFaceWithNormal(obj.Pos, obj.Obj.color, obj.Obj.normal, size))
-            {
-				quads[currentIndex] = p;
-				currentIndex += 1;
-            }
 
+		for(int i = 0; i < objects.Count; i ++)
+        {
+			//Point[] quadsVertices = new Point[4];
+			PointCloudReader.AddFaceWithNormal(objects[i].Pos, objects[i].Obj.color, objects[i].Obj.normal, size, currentIndex, ref quads);
+
+			//quads[currentIndex] = quadsVertices[0];
+			//quads[currentIndex + 1] = quadsVertices[1];
+			//quads[currentIndex + 2] = quadsVertices[2];
+			//quads[currentIndex + 3] = quadsVertices[3];
+
+			currentIndex += 4;
 			if (currentIndex >= maxPoints * 4) return;
 
 		}
+
+		//foreach(OctreeObject obj in objects)
+  //      {
+		//	foreach(Point p in PointCloudReader.AddFaceWithNormal(obj.Pos, obj.Obj.color, obj.Obj.normal, size))
+  //          {
+		//		quads[currentIndex] = p;
+		//		currentIndex += 1;
+  //          }
+
+		//	if (currentIndex >= maxPoints * 4) return;
+
+		//}
 
 		if (children != null)
 		{

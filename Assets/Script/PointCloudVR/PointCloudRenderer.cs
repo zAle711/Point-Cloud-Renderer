@@ -67,15 +67,49 @@ namespace PointCloudVR
         //    PrepareMaterial();
         //}
 
+        public void SetData(Vector3[] threadPoints, int[] threadColors, Vector3[] threadNormals, int totalPoints)
+        {
+            if (totalPoints == 0) return;
+
+            Vector3[] points = new Vector3[totalPoints];
+            int[] colors = new int[totalPoints];
+            Vector3[] normals = topology == MeshTopology.Quads ? new Vector3[totalPoints] : null;
+
+            for(int i = 0; i < totalPoints; i++)
+            {
+                points[i] = threadPoints[i];
+                colors[i] = threadColors[i];
+                if (topology == MeshTopology.Quads) normals[i] = threadNormals[i];
+            }
+
+            pointsBuffer = new ComputeBuffer(totalPoints, 3 * sizeof(float));
+            colorsBuffer = new ComputeBuffer(totalPoints, sizeof(int));
+
+            pointsBuffer.SetData(points);
+            colorsBuffer.SetData(colors);
+
+            if (topology == MeshTopology.Quads)
+            {
+                normalsBuffer = new ComputeBuffer(totalPoints, 3 * sizeof(float));
+                normalsBuffer.SetData(normals);
+            }
+
+            //SetPoints(points);
+            //SetColors(colors);
+            //SetNormals(normals);
+
+            PrepareMaterial();
+        }
+
         public void SetData(Vector3[] points, int[] colors, Vector3[] normals)
         {
+
             SetPoints(points);
             SetColors(colors);
             SetNormals(normals);
 
             PrepareMaterial();
         }
-
 
         public void SetData(Vector3[] points, int[] colors)
         {

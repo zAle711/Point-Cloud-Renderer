@@ -50,56 +50,50 @@ namespace PointCloudVR
 
         }
 
-        public static Point[] ZFace(Vector3 point, int color, Vector3 normal, float size)
+        public static void ZFace(Vector3 point, int color, Vector3 normal, float size, int currentIndex, ref Point[] quads)
         {
-            Point[] p = new Point[4];
 
             Vector3 bottomLeft = new Vector3(point.x + size, point.y - size, point.z);
             Vector3 topLeft = new Vector3(point.x + size, point.y + size, point.z);
             Vector3 topRight = new Vector3(point.x - size, point.y + size, point.z);
             Vector3 bottomRight = new Vector3(point.x - size, point.y - size, point.z);
 
-            p[0] = new Point(bottomLeft, color, normal);
-            p[1] = new Point(topLeft, color, normal);
-            p[2] = new Point(topRight, color, normal);
-            p[3] = new Point(bottomRight, color, normal);
+            quads[currentIndex] = new Point(bottomLeft, color, normal);
+            quads[currentIndex + 1] = new Point(topLeft, color, normal);
+            quads[currentIndex + 2] = new Point(topRight, color, normal);
+            quads[currentIndex + 3] = new Point(bottomRight, color, normal);
 
-            return p;
         }
 
-        public static Point[] YFace(Vector3 point, int color, Vector3 normal, float size)
+        public static void YFace(Vector3 point, int color, Vector3 normal, float size, int currentIndex, ref Point[] quads)
         {
-            Point[] p = new Point[4];
 
             Vector3 bottomLeft = new Vector3(point.x + size, point.y , point.z - size);
             Vector3 topLeft = new Vector3(point.x - size, point.y, point.z - size);
             Vector3 topRight = new Vector3(point.x - size, point.y, point.z + size);
             Vector3 bottomRight = new Vector3(point.x + size, point.y, point.z + size);
 
-            p[0] = new Point(bottomLeft, color, normal);
-            p[1] = new Point(topLeft, color, normal);
-            p[2] = new Point(topRight, color, normal);
-            p[3] = new Point(bottomRight, color, normal);
-
-            return p;
+            quads[currentIndex] = new Point(bottomLeft, color, normal);
+            quads[currentIndex + 1] = new Point(topLeft, color, normal);
+            quads[currentIndex + 2] = new Point(topRight, color, normal);
+            quads[currentIndex + 3] = new Point(bottomRight, color, normal);
         }
 
 
-        public static Point[] XFace(Vector3 point, int color, Vector3 normal, float size)
+        public static void XFace(Vector3 point, int color, Vector3 normal, float size, int currentIndex, ref Point[] quads)
         {
-            Point[] p = new Point[4];
+            //Point[] p = new Point[4];
 
             Vector3 bottomLeft = new Vector3(point.x, point.y - size, point.z - size);
             Vector3 topLeft = new Vector3(point.x, point.y + size, point.z - size);
             Vector3 topRight = new Vector3(point.x, point.y + size, point.z + size);
             Vector3 bottomRight = new Vector3(point.x, point.y - size, point.z + size);
 
-            p[0] = new Point(bottomLeft, color, normal);
-            p[1] = new Point(topLeft, color, normal);
-            p[2] = new Point(topRight, color, normal);
-            p[3] = new Point(bottomRight, color, normal);
+            quads[currentIndex] = new Point(bottomLeft, color, normal);
+            quads[currentIndex + 1] = new Point(topLeft, color, normal);
+            quads[currentIndex + 2] = new Point(topRight, color, normal);
+            quads[currentIndex + 3] = new Point(bottomRight, color, normal);
             
-            return p;
         }
 
         public static Vector3 GetNormalVector(float x, float y, float z)

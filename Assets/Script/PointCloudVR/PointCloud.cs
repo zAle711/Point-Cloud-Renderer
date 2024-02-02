@@ -85,14 +85,15 @@ namespace PointCloudVR
 
             if (frustumCulling.GetLastUpdateTime() == lastUpdate)
             {
-                //Debug.Log("Punti già aggiornati");
                 return;
             }
 
-            var (p, c, n) = frustumCulling.GetData();
+            var (p, c, n, t) = frustumCulling.GetData();
 
             lastUpdate = frustumCulling.GetLastUpdateTime();
             textLabel.text = $"Vertici totali: {p.Length}";
+
+            //pointCloudRenderer.SetData(p, c, n, t);
             if (renderMode == RenderMode.POINT)
                 pointCloudRenderer.SetData(p, c);
             else
@@ -123,6 +124,7 @@ namespace PointCloudVR
             {
                 frustumCulling.SetCamera(cam, transform.localToWorldMatrix);
             }
+            
             frustumCulling.SetCamera(cam, transform.localToWorldMatrix);
             //frustumCulling.SetCamera(cam, transform.localToWorldMatrix);
             ////textLabel.text = $"Punti Renderizzati: {pointCloudRenderer.GetNPoints()}";

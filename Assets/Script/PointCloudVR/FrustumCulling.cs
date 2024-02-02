@@ -30,7 +30,7 @@ namespace PointCloudVR
         public Vector3[] pointsToRender;
         public int[] pointsColorsToRender;
         public Vector3[] normalsToRender;
-
+        public int totalPoints = 0;
     }
 
     public class FrustumCulling
@@ -43,6 +43,9 @@ namespace PointCloudVR
             frustumParams = new FrustumParams();
             frustumParams.OcTree = OcTree;
             frustumParams.maxPointsToRender = maxPointsToRender;
+            frustumParams.pointsToRender = new Vector3[maxPointsToRender * 4];
+            frustumParams.pointsColorsToRender = new int[maxPointsToRender * 4];
+            frustumParams.normalsToRender = new Vector3[maxPointsToRender * 4];
             thread = new Thread(new ParameterizedThreadStart(ComputeInsidePoints));
             thread.Priority = System.Threading.ThreadPriority.Lowest;
         }
@@ -93,6 +96,9 @@ namespace PointCloudVR
             lock (frustumParams)
             {
                 frustumParams.maxPointsToRender = maxPointsToRender;
+                frustumParams.pointsToRender = new Vector3[maxPointsToRender * 4];
+                frustumParams.pointsColorsToRender = new int[maxPointsToRender * 4];
+                frustumParams.normalsToRender = new Vector3[maxPointsToRender * 4];
             }
         }
 
@@ -115,11 +121,11 @@ namespace PointCloudVR
             }
         }
 
-        public (Vector3[], int[], Vector3[]) GetData()
+        public (Vector3[], int[], Vector3[], int) GetData()
         {
             lock (frustumParams)
             {
-                return (frustumParams.pointsToRender, frustumParams.pointsColorsToRender, frustumParams.normalsToRender);
+                return (frustumParams.pointsToRender, frustumParams.pointsColorsToRender, frustumParams.normalsToRender, frustumParams.totalPoints);
             }
         }
 
@@ -168,6 +174,14 @@ namespace PointCloudVR
                 int[] visibleColors = new int[totalPoints];
                 Vector3[] visibleNormals = quad ? new Vector3[totalPoints] : null;
 
+                //for (int i = 0; i < totalPoints; i++)
+                //{
+                //    frustumParams.pointsToRender[i] = quads[i].position;
+                //    frustumParams.pointsColorsToRender[i] = quads[i].color;
+                //    frustumParams.normalsToRender[i] = quads[i].normal;
+                //}
+
+                Debug.Log($"Punti trovati: {totalPoints}");
 
                 for (int i = 0; i < totalPoints; i++)
                 {
@@ -178,9 +192,17 @@ namespace PointCloudVR
 
                 lock (p)
                 {
-                    p.pointsToRender = visiblePoints;
-                    p.pointsColorsToRender = visibleColors;
-                    p.normalsToRender = visibleNormals;
+
+                    //for (int i = 0; i < totalPoints; i++)
+                    //{
+                    //    frustumParams.pointsToRender[i] = quads[i].position;
+                    //    frustumParams.pointsColorsToRender[i] = quads[i].color;
+                    //    frustumParams.normalsToRender[i] = quads[i].normal;
+                    //}
+                    frustumParams.pointsToRender = visiblePoints;
+                    frustumParams.pointsColorsToRender = visibleColors;
+                    frustumParams.normalsToRender = visibleNormals;
+                    p.totalPoints = totalPoints;
                     p.lastUpdate = DateTime.Now;
                 }
 

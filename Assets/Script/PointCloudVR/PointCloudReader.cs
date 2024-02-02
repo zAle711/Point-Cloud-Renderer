@@ -110,24 +110,22 @@ namespace PointCloudVR
             meshCollider.sharedMesh = mesh;
         }
 
-        public static Point[] AddFaceWithNormal(Vector3 position, int color, Vector3 normal, float faceSize)
+        public static void AddFaceWithNormal(Vector3 position, int color, Vector3 normal, float faceSize, int currentIndex, ref Point[] quads)
         {
-            Point[] quadVertices = new Point[4];
 
             if (normal.x == 1 || normal.x == -1)
             {
-                return Util.XFace(position, color, normal, faceSize);
+                Util.XFace(position, color, normal, faceSize, currentIndex, ref quads);
             } 
             else if (normal.y == 1 || normal.y == -1)
             {
-                return Util.YFace(position, color, normal, faceSize);
+                Util.YFace(position, color, normal, faceSize, currentIndex, ref quads);
             } 
             else if (normal.z == 1 || normal.z == -1)
             {
-                return Util.ZFace(position, color, normal, faceSize);
+                Util.ZFace(position, color, normal, faceSize, currentIndex, ref quads);
             }
 
-            return quadVertices;
         }
 
     }
