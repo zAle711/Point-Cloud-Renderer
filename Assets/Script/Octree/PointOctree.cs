@@ -128,15 +128,16 @@ public class PointOctree {
 	//	return collidingWith.ToArray();
 	//}
 
-	public Point[] GetVisibleQuads(Plane[] planes, List<Point> quads, float size, int maxPoints)
+	public void GetVisibleQuads(Plane[] planes, Point[] quads, float size, int maxPoints, ref int index)
     {
-		rootNode.GetVisibleQuads(planes, size, maxPoints , quads);
-		return quads.ToArray();
+		rootNode.GetVisibleQuads(planes, size, maxPoints , quads, ref index);
+		//return quads.ToArray();
     }
-	public Point[] GetVisiblePoints(Plane[] planes, List<Point> visiblePoints, int maxPoints)
+	
+	public void GetVisiblePoints(Plane[] planes, Point[] visiblePoints, int maxPoints, ref int index)
     {
-		rootNode.GetVisiblePoints(planes, maxPoints, visiblePoints);
-		return visiblePoints.ToArray();
+		rootNode.GetVisiblePoints(planes, maxPoints, visiblePoints, ref index);
+		//return visiblePoints;
 
 	}
 

@@ -146,54 +146,59 @@ public class PointOctreeNode{
 		}
 	}
 
-	public void GetVisibleQuads(Plane[] planes, float size, int maxPoints, List<Point> quads)
+	public void GetVisibleQuads(Plane[] planes, float size, int maxPoints, Point[] quads, ref int currentIndex)
     {
 		if (!Util.TestPlanesAABB(planes, bounds))
 		{
 			return;
 		}
-
 		foreach(OctreeObject obj in objects)
         {
-			quads.AddRange(PointCloudReader.AddFaceWithNormal(obj.Pos, obj.Obj.color, obj.Obj.normal, size));
-        }
+			foreach(Point p in PointCloudReader.AddFaceWithNormal(obj.Pos, obj.Obj.color, obj.Obj.normal, size))
+            {
+				quads[currentIndex] = p;
+				currentIndex += 1;
+            }
 
-		if (quads.Count >= maxPoints * 4)
-		{
-			return;
+			if (currentIndex >= maxPoints * 4) return;
+
 		}
 
 		if (children != null)
 		{
 			for (int i = 0; i < 8; i++)
 			{
-				children[i].GetVisibleQuads(planes, size, maxPoints, quads);
+				children[i].GetVisibleQuads(planes, size, maxPoints, quads, ref currentIndex);
 			}
 		}
 	}
 
-	public void GetVisiblePoints(Plane[] planes, int maxPoints , List<Point> result)
+	public void GetVisiblePoints(Plane[] planes, int maxPoints , Point[] result, ref int currentIndex)
     {
 		if (!Util.TestPlanesAABB(planes, bounds))
         {
 			return;
         }
 
+
 		foreach(OctreeObject obj in objects)
         {
-			result.Add(new Point(obj.Pos, obj.Obj.color));
-        }
+			result[currentIndex] = new Point(obj.Pos, obj.Obj.color);
+			currentIndex += 1;
+			if (currentIndex >= maxPoints) return;
+			//result.Add(new Point(obj.Pos, obj.Obj.color));
+		}
 
-		if (result.Count >= maxPoints)
-        {
-			return;
-        }
+		//if (currentIndex >= maxPoints)
+  //      {
+		//	return;
+  //      }
 
 		if (children != null)
         {
 			for (int i = 0; i < 8; i++)
 			{
-				children[i].GetVisiblePoints(planes, maxPoints, result);
+				children[i].GetVisiblePoints(planes, maxPoints, result, ref currentIndex);
 			}
 		}
     }

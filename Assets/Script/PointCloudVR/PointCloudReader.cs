@@ -19,7 +19,7 @@ namespace PointCloudVR
         {
             List<Point> all_points = new List<Point>();
 
-            string filePath = Path.Combine(Application.streamingAssetsPath, fileName);
+            string filePath = Path.Combine("D:/VR_Training/PointCloud", fileName);
             Debug.Log($"FIle da caricare: {filePath}");
             StreamReader inp_stm = new StreamReader(filePath);
 

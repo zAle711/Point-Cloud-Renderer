@@ -123,7 +123,7 @@ namespace PointCloudVR
             {
                 frustumCulling.SetCamera(cam, transform.localToWorldMatrix);
             }
-
+            frustumCulling.SetCamera(cam, transform.localToWorldMatrix);
             //frustumCulling.SetCamera(cam, transform.localToWorldMatrix);
             ////textLabel.text = $"Punti Renderizzati: {pointCloudRenderer.GetNPoints()}";
             //pointCloudRenderer.SetWorldMatrix(transform.localToWorldMatrix);

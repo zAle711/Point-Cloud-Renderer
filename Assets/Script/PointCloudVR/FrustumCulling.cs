@@ -135,13 +135,15 @@ namespace PointCloudVR
         {
             FrustumParams p = (FrustumParams)obj;
             PointOctree octree = p.OcTree;
-            List<Point> points = new List<Point>();
+
+            //Point[] points = new Point[frustumParams.maxPointsToRender];
+            Point[] quads = new Point[frustumParams.maxPointsToRender * 4];
+
 
             while (p.running)
             {
                 Plane[] frustumPlanes;
-
-                points.Clear();
+                int totalPoints = 0;
 
                 bool quad;
                 float cubeSize;
@@ -156,19 +158,22 @@ namespace PointCloudVR
                 }
 
                 if (quad)
-                    octree.GetVisibleQuads(frustumPlanes, points, cubeSize, maxPoints);
+                    octree.GetVisibleQuads(frustumPlanes, quads, cubeSize, maxPoints, ref totalPoints);
                 else
-                    octree.GetVisiblePoints(frustumPlanes, points, maxPoints);
+                    octree.GetVisiblePoints(frustumPlanes, quads, maxPoints, ref totalPoints);
 
-                Vector3[] visiblePoints = new Vector3[points.Count];
-                int[] visibleColors = new int[points.Count];
-                Vector3[] visibleNormals = quad ? new Vector3[points.Count] : null;
 
-                for(int i = 0; i < points.Count; i++)
+
+                Vector3[] visiblePoints = new Vector3[totalPoints];
+                int[] visibleColors = new int[totalPoints];
+                Vector3[] visibleNormals = quad ? new Vector3[totalPoints] : null;
+
+
+                for (int i = 0; i < totalPoints; i++)
                 {
-                    visiblePoints[i] = points[i].position;
-                    visibleColors[i] = points[i].color;
-                    if (quad) visibleNormals[i] = points[i].normal;
+                    visiblePoints[i] = quads[i].position;
+                    visibleColors[i] = quads[i].color;
+                    if (quad) visibleNormals[i] = quads[i].normal;
                 }
 
                 lock (p)
@@ -178,23 +183,7 @@ namespace PointCloudVR
                     p.normalsToRender = visibleNormals;
                     p.lastUpdate = DateTime.Now;
                 }
-                //ComputeBuffer visibleP;
-                //ComputeBuffer visibleC;
-                //ComputeBuffer visibleN;
 
-                //GetDataFromResult(points, quad, out visibleP, out visibleC, out visibleN);
-
-                //lock (p)
-                //{
-                //    if (p.p != null) p.p.Release();
-                //    if (p.c != null) p.c.Release();
-                //    if (p.n != null) p.n.Release();
-
-                //    p.p = visibleP;
-                //    p.c = visibleC;
-                //    p.n = visibleN;
-                //    p.lastUpdate = DateTime.Now;
-                //}
 
             }
         }
