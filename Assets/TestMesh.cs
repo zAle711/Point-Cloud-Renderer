@@ -64,8 +64,8 @@ public class TestMesh : MonoBehaviour
     }
     public void ReadFileWithRGBNormals(string fileName, bool invertXY = true)
     {
-        int headerLength = 17;
-        int totalVertices = 261217;
+        int headerLength = 0;
+        int totalVertices = 0;
 
         string filePath = Path.Combine("D:/VR_Training/Mesh", fileName);
         StreamReader inp_stm = new StreamReader(filePath);
@@ -75,6 +75,8 @@ public class TestMesh : MonoBehaviour
         List<Vector3> n = new List<Vector3>();
         List<int> t = new List<int>();
 
+        bool header = true;
+
         int offsetY = invertXY ? 2 : 1;
         int offsetZ = invertXY ? 1 : 2;
         int j = 0;
@@ -82,6 +84,24 @@ public class TestMesh : MonoBehaviour
         {
             j += 1;
             string inp_ln = inp_stm.ReadLine();
+            if (header)
+            {
+                string[] args = inp_ln.Split();
+
+                if (args[0] == "element" && args[1] == "vertex")
+                {
+                    totalVertices = int.Parse(args[2]);
+                    Debug.Log("Vertici totali nella Mesh: " + totalVertices);
+                }
+
+                if (inp_ln == "end_header")
+                {
+                    header = false;
+                }
+
+                headerLength += 1;
+                continue;
+            }
 
             string[] coords = inp_ln.Split();
             if (j <= totalVertices + headerLength )

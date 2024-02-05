@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using UnityEngine;
+using System.Linq;
 
 namespace PointCloudVR
 {
@@ -14,18 +15,24 @@ namespace PointCloudVR
         private static float minZ = float.MaxValue;
         private static float maxZ = float.MinValue;
 
-
-        public static Point[] ReadFileWithNormals(out Vector3[] points, out int[] colors, out Vector3[] normals, string fileName, float quadSize, bool invertXY = true)
+        public static void ReadPCDFile(out PointCloud pc, out PointCloud pcQ, string fileName, float quadSize, bool invertXY = true)
         {
-            List<Point> all_points = new List<Point>();
+
+            List<Vector3> p = new List<Vector3>();
+            List<int> c = new List<int>();
+
+            List<Vector3> qp = new List<Vector3>();
+            List<int> qc = new List<int>();
+            List<Vector3> qn = new List<Vector3>();
+
 
             string filePath = Path.Combine("D:/VR_Training/PointCloud", fileName);
-            Debug.Log($"FIle da caricare: {filePath}");
+
             StreamReader inp_stm = new StreamReader(filePath);
 
             int offsetY = invertXY ? 2 : 1;
             int offsetZ = invertXY ? 1 : 2;
-
+            Point[] quad_face = new Point[4];
             while (!inp_stm.EndOfStream)
             {
                 string inp_ln = inp_stm.ReadLine();
@@ -44,35 +51,117 @@ namespace PointCloudVR
                     float zn = float.Parse(coords[4 + offsetZ], CultureInfo.InvariantCulture);
 
                     Vector3 point_position = new Vector3(x, y, z);
-                    UpdateMinMaxValues(point_position);
                     Vector3 point_normal = Util.GetNormalVector(xn, yn, zn);
 
-                    //all_points.AddRange(AddFaceWithNormal(point_position, color, point_normal, quadSize));
-                    all_points.Add(new Point(point_position, color, point_normal));
+
+                    p.Add(point_position);
+                    c.Add(color);
+                    
+                    AddFaceWithNormal(point_position, color, point_normal, quadSize, 0, ref quad_face);
+
+                    qp.AddRange(quad_face.Select((o) => o.position));
+                    qc.AddRange(quad_face.Select((o) => o.color));
+                    qn.AddRange(quad_face.Select((o) => o.normal));
+
+                    UpdateMinMaxValues(point_position);
 
                 }
                 catch (Exception e)
                 {
-                    Debug.Log(e.Message);
+                    Debug.Log(e.ToString());
                 }
 
             }
 
-            points = new Vector3[all_points.Count];
-            colors = new int[all_points.Count];
-            normals = new Vector3[all_points.Count];
-
-            for(int i = 0; i < all_points.Count; i++)
-            {
-                points[i] = all_points[i].position;
-                colors[i] = all_points[i].color;
-                normals[i] = all_points[i].normal;
-            }
-
-            return all_points.ToArray();
+            pc = new PointCloud(p.ToArray(), c.ToArray());
+            pcQ = new PointCloud(qp.ToArray(), qc.ToArray(), qn.ToArray());
         }
 
+        public static void ReadPLYFile(out Vector3[] vertices, out int[] colors, out Vector3[] normals, out int[] triangles, string fileName, bool invertXY = true)
+        {
+            int headerLength = 0;
+            int totalVertices = 0;
 
+            string filePath = Path.Combine("D:/VR_Training/Mesh", fileName);
+            StreamReader inp_stm = new StreamReader(filePath);
+
+            List<Vector3> p = new List<Vector3>();
+            List<int> c = new List<int>();
+            List<Vector3> n = new List<Vector3>();
+            List<int> t = new List<int>();
+
+            bool header = true;
+
+            int offsetY = invertXY ? 2 : 1;
+            int offsetZ = invertXY ? 1 : 2;
+            int j = 0;
+            while (!inp_stm.EndOfStream)
+            {
+                j += 1;
+                string inp_ln = inp_stm.ReadLine();
+                if (header)
+                {
+                    string[] args = inp_ln.Split();
+
+                    if (args[0] == "element" && args[1] == "vertex")
+                    {
+                        totalVertices = int.Parse(args[2]);
+                        Debug.Log("Vertici totali nella Mesh: " + totalVertices);
+                    }
+
+                    if (inp_ln == "end_header")
+                    {
+                        header = false;
+                    }
+
+                    headerLength += 1;
+                    continue;
+                }
+
+                string[] coords = inp_ln.Split();
+                if (j <= totalVertices + headerLength)
+                {
+                    try
+                    {
+                        float x = float.Parse(coords[0], CultureInfo.InvariantCulture);
+                        float y = float.Parse(coords[offsetY], CultureInfo.InvariantCulture);
+                        float z = float.Parse(coords[offsetZ], CultureInfo.InvariantCulture);
+
+                        c.Add(Util.encodeColor(int.Parse(coords[3]), int.Parse(coords[4]), int.Parse(coords[5])));
+
+                        float xn = float.Parse(coords[6], CultureInfo.InvariantCulture);
+                        float yn = float.Parse(coords[7 + offsetY], CultureInfo.InvariantCulture);
+                        float zn = float.Parse(coords[8 + offsetZ], CultureInfo.InvariantCulture);
+
+                        p.Add(new Vector3(x, y, z));
+
+                        n.Add(new Vector3(xn, yn, zn));
+                        //all_points.AddRange(AddFaceWithNormal(point_position, color, point_normal, quadSize));
+
+                    }
+                    catch (Exception e)
+                    {
+
+                    }
+                }
+                else
+                {
+                    int i1 = int.Parse(coords[1]);
+                    int i2 = int.Parse(coords[2]);
+                    int i3 = int.Parse(coords[3]);
+
+                    t.Add(i1);
+                    t.Add(i2);
+                    t.Add(i3);
+                }
+            }
+            Debug.Log($"Vertici: {p.Count} Colori: {c.Count} Normali: {n.Count} Triangoli: {t.Count}");
+            vertices = p.ToArray();
+            colors = c.ToArray();
+            normals = n.ToArray();
+
+            triangles = t.ToArray();
+        }
 
         private static void UpdateMinMaxValues(Vector3 point)
         {
@@ -92,10 +181,10 @@ namespace PointCloudVR
                 return;
             }
 
-            v[0] = new Vector3(minX, minY - 0.025f, minZ);
-            v[1] = new Vector3(minX, minY - 0.025f, maxZ);
-            v[2] = new Vector3(maxX, minY - 0.025f, maxZ);
-            v[3] = new Vector3(maxX, minY - 0.025f, minZ);
+            v[0] = new Vector3(minX, minY - 0.00f, minZ);
+            v[1] = new Vector3(minX, minY - 0.00f, maxZ);
+            v[2] = new Vector3(maxX, minY + 0.1f, maxZ);
+            v[3] = new Vector3(maxX, minY + 0.1f, minZ);
             
             
             MeshFilter meshFilter = floor.GetComponent<MeshFilter>();

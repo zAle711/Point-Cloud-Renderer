@@ -9,6 +9,8 @@ TagManager:
   - RobotCamera
   - ImageSubscriber
   - Floor
+  - WaypointMenu
+  - PCMesh
   layers:
   - Default
   - TransparentFX

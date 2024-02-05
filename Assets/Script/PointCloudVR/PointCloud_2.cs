@@ -11,7 +11,7 @@ namespace PointCloudVR
         CUBE
     }
 
-    public class PointCloud : MonoBehaviour
+    public class PointCloud_2 : MonoBehaviour
     {
         public string fileName = "corridoio_with_normals.pcd";
         public RenderMode renderMode;
@@ -52,7 +52,7 @@ namespace PointCloudVR
             textLabel = GameObject.FindGameObjectWithTag("Info").GetComponent<TextMeshProUGUI>();
            
             //Read PointCloud from file and create Octree to store points.
-            pointCloud = PointCloudReader.ReadFileWithNormals(out points, out colors, out normals, fileName, cubeSize);
+            //pointCloud = PointCloudReader.ReadFileWithNormals(out points, out colors, out normals, fileName, cubeSize);
             
             CreateOctree();
 
@@ -79,34 +79,34 @@ namespace PointCloudVR
             }
         }
 
-        private void RetrieveData()
-        {
-            if (frustumCulling == null) return;
+        //private void RetrieveData()
+        //{
+        //    if (frustumCulling == null) return;
 
-            if (frustumCulling.GetLastUpdateTime() == lastUpdate)
-            {
-                return;
-            }
+        //    if (frustumCulling.GetLastUpdateTime() == lastUpdate)
+        //    {
+        //        return;
+        //    }
 
-            var (p, c, n, t) = frustumCulling.GetData();
+        //    var (p, c, n, t) = frustumCulling.GetData();
 
-            lastUpdate = frustumCulling.GetLastUpdateTime();
-            textLabel.text = $"Vertici totali: {p.Length}";
+        //    lastUpdate = frustumCulling.GetLastUpdateTime();
+        //    textLabel.text = $"Vertici totali: {p.Length}";
 
-            //pointCloudRenderer.SetData(p, c, n, t);
-            if (renderMode == RenderMode.POINT)
-                pointCloudRenderer.SetData(p, c);
-            else
-                if (n != null) pointCloudRenderer.SetData(p, c, n);
+        //    //pointCloudRenderer.SetData(p, c, n, t);
+        //    if (renderMode == RenderMode.POINT)
+        //        pointCloudRenderer.SetData(p, c);
+        //    else
+        //        if (n != null) pointCloudRenderer.SetData(p, c, n);
 
 
-        }
+        //}
         // Update is called once per frame
         void Update()
         {
             if (Input.GetKeyDown(KeyCode.Space))
             {
-                RetrieveData();
+                //RetrieveData();
                 textLabel.text = $"adsa + {Time.realtimeSinceStartup}";
             }
             
