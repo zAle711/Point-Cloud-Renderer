@@ -2,9 +2,9 @@ using UnityEngine;
 
 namespace PointCloudVR
 {
-    class PointCloudRenderer
+    public class PointCloudRenderer : MonoBehaviour
     {
-        public bool render = true;
+        public bool render;
 
         private Material pointMaterial;
         private Material quadMaterial;
@@ -22,14 +22,14 @@ namespace PointCloudVR
         private ComputeBuffer quadNormals;
 
         private int totalPoints = 0;
-        
-        public PointCloudRenderer()
-        {
-            topology = MeshTopology.Points;
 
+        private void Start()
+        {
+            topology = MeshTopology.Quads;
+            render = true;
             point = Shader.Find("Unlit/PointShader");
             quad = Shader.Find("Unlit/QuadShader");
-            
+
             pointMaterial = new Material(point);
         }
 
@@ -72,35 +72,12 @@ namespace PointCloudVR
 
         public void Render()
         {
-            if (!render && totalPoints == 0) return;
+            if (!render || totalPoints == 0) return;
 
             pointMaterial.SetPass(0);
             
             Graphics.DrawProceduralNow(topology, totalPoints, 1);
         }
-
-        //public void SetData(ComputeBuffer p, ComputeBuffer c, ComputeBuffer n)
-        //{
-        //    pointsBuffer.Release();
-        //    pointsBuffer = p;
-        //    colorsBuffer.Release();
-        //    colorsBuffer = c;
-        //    normalsBuffer.Release();
-        //    normalsBuffer = n;
-
-        //    PrepareMaterial();
-        //}
-
-        //public void SetData(ComputeBuffer p, ComputeBuffer c)
-        //{
-        //    pointsBuffer.Release();
-        //    pointsBuffer = p;
-        //    colorsBuffer.Release();
-        //    colorsBuffer = c;
-
-        //    PrepareMaterial();
-        //}
-
         public void SetData(Vector3[] threadPoints, int[] threadColors, Vector3[] threadNormals, int totalPoints)
         {
             if (totalPoints == 0) return;
@@ -134,57 +111,6 @@ namespace PointCloudVR
 
             PrepareMaterial();
         }
-
-        //public void SetData(Vector3[] points, int[] colors, Vector3[] normals)
-        //{
-
-        //    SetPoints(points);
-        //    SetColors(colors);
-        //    SetNormals(normals);
-
-        //    PrepareMaterial();
-        //}
-
-        //public void SetData(Vector3[] points, int[] colors)
-        //{
-
-        //    SetPoints(points);
-        //    SetColors(colors);
-
-        //    PrepareMaterial();
-        //}
-
-        //private void SetPoints(Vector3[] points)
-        //{
-        //    if (points == null || points.Length == 0) return;
-
-        //    if (pointsVertices != null) pointsVertices.Release();
-
-        //    pointsVertices = new ComputeBuffer(points.Length, 3 * sizeof(float));
-        //    pointsVertices.SetData(points);
-        //    totalPoints = points.Length;
-        //}
-
-        //private void SetColors(int[] colors)
-        //{
-        //    if (colors == null || colors.Length == 0) return;
-
-        //    if (pointsColors != null) pointsColors.Release();
-
-        //    pointsColors = new ComputeBuffer(colors.Length, sizeof(int));
-        //    pointsColors.SetData(colors);
-        //}
-
-        //private void SetNormals(Vector3[] normals)
-        //{
-        //    if (normals == null || normals.Length == 0) return;
-
-        //    if (normalsBuffer != null) normalsBuffer.Release();
-
-        //    normalsBuffer = new ComputeBuffer(normals.Length, 3 * sizeof(float));
-        //    normalsBuffer.SetData(normals);
-        //}
-
         public void SetTopology(RenderMode renderMode)
         {
             switch (renderMode)
@@ -194,7 +120,7 @@ namespace PointCloudVR
                     pointMaterial = new Material(point);
                     PrepareMaterial();
                     break;
-                case RenderMode.CUBE:
+                case RenderMode.QUAD:
                     topology = MeshTopology.Quads;
                     pointMaterial = new Material(quad);
                     PrepareMaterial();

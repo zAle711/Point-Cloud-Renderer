@@ -70,7 +70,7 @@ namespace PointCloudVR
                         frustumParams.quad = false;
                     }
                     break;
-                case RenderMode.CUBE:
+                case RenderMode.QUAD:
                     lock (frustumParams)
                     {
                         frustumParams.quad = true;

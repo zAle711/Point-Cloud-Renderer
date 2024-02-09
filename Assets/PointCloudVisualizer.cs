@@ -33,31 +33,26 @@ namespace PointCloudVR
         public string Point_Cloud = "";
         public string Point_Cloud_Mesh = "";
         public float Quad_Size = 0.15f;
+        public bool invertYZ = false;
+    
 
         private PointCloud pc;
         private PointCloud pcQ;
 
         private GameObject pc_mesh;
 
-        private PointCloudRenderer pcRenderer;
-        private void Awake()
-        {
-            pcRenderer = new PointCloudRenderer();
-        }
+        public PointCloudRenderer pcRenderer;
 
         void Start()
-        {
-            
-
-            PointCloudReader.ReadPCDFile(out pc, out pcQ, Point_Cloud, Quad_Size);
+        {        
+            if (Point_Cloud != "") PointCloudReader.ReadPCDFile(out pc, out pcQ, Point_Cloud, Quad_Size, invertYZ);
             PointCloudReader.CreateFloor(GameObject.FindGameObjectWithTag("Floor"));
-            PointCloudReader.ReadPLYFile(out Vector3[] v, out int[] c, out Vector3[] n, out int[] t, Point_Cloud_Mesh);
+            PointCloudReader.ReadPLYFile(out Vector3[] v, out int[] c, out Vector3[] n, out int[] t, Point_Cloud_Mesh, invertYZ);
 
             pc_mesh = GameObject.FindGameObjectWithTag("PCMesh");
-            CreateMesh(v, c, n, t);
-            
+            CreateMesh(v, c, n, t);         
 
-            pcRenderer.SetData(pc, pcQ);
+            //pcRenderer.SetData(pc, pcQ);
         }
 
         private void CreateMesh(Vector3[] v, int[] c, Vector3[] n, int[] t)
@@ -72,6 +67,7 @@ namespace PointCloudVR
             mesh.normals = n;
             mesh.triangles = t;
             mesh.RecalculateBounds();
+            mesh.RecalculateNormals();
 
             mf.mesh = mesh;
 
@@ -83,6 +79,7 @@ namespace PointCloudVR
             mr.material = mat;
 
             mc.sharedMesh = mesh;
+            //pc_mesh.SetActive(false);
         }
 
         // Update is called once per frame
@@ -90,7 +87,7 @@ namespace PointCloudVR
         {
             if(Input.GetKeyDown(KeyCode.C))
             {
-                pcRenderer.SetTopology(RenderMode.CUBE);
+                pcRenderer.SetTopology(RenderMode.QUAD);
             }
 
             if (Input.GetKeyDown(KeyCode.P))

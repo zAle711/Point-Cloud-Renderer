@@ -66,10 +66,7 @@ namespace PointCloudVR
                     UpdateMinMaxValues(point_position);
 
                 }
-                catch (Exception e)
-                {
-                    Debug.Log(e.ToString());
-                }
+                catch  { }
 
             }
 
@@ -127,11 +124,11 @@ namespace PointCloudVR
                         float y = float.Parse(coords[offsetY], CultureInfo.InvariantCulture);
                         float z = float.Parse(coords[offsetZ], CultureInfo.InvariantCulture);
 
-                        c.Add(Util.encodeColor(int.Parse(coords[3]), int.Parse(coords[4]), int.Parse(coords[5])));
+                        c.Add(Util.encodeColor(int.Parse(coords[6]), int.Parse(coords[7]), int.Parse(coords[8])));
 
-                        float xn = float.Parse(coords[6], CultureInfo.InvariantCulture);
-                        float yn = float.Parse(coords[7 + offsetY], CultureInfo.InvariantCulture);
-                        float zn = float.Parse(coords[8 + offsetZ], CultureInfo.InvariantCulture);
+                        float xn = float.Parse(coords[3], CultureInfo.InvariantCulture);
+                        float yn = float.Parse(coords[3 + offsetY], CultureInfo.InvariantCulture);
+                        float zn = float.Parse(coords[3 + offsetZ], CultureInfo.InvariantCulture);
 
                         p.Add(new Vector3(x, y, z));
 
@@ -139,10 +136,8 @@ namespace PointCloudVR
                         //all_points.AddRange(AddFaceWithNormal(point_position, color, point_normal, quadSize));
 
                     }
-                    catch (Exception e)
-                    {
-
-                    }
+                    catch { }
+                    
                 }
                 else
                 {

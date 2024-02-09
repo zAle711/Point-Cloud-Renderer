@@ -8,7 +8,7 @@ namespace PointCloudVR
     public enum RenderMode
     {
         POINT,
-        CUBE
+        QUAD
     }
 
     public class PointCloud_2 : MonoBehaviour
