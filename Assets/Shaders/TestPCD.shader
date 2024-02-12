@@ -50,7 +50,7 @@ Shader "Unlit/TestPCD"
             v2f vert (appdata v, uint vid : SV_VertexID)
             {
                 float min = 0.0;  // Valore minimo
-                float max = 2.0;  // Valore massimo
+                float max = 5.0;  // Valore massimo
 
 
                 v2f o;
@@ -63,16 +63,16 @@ Shader "Unlit/TestPCD"
                 half4 start = half4(0.0, 0.0, 1.0, 1.0);  // Colore di partenza (rosso)
                 half4 end = half4(0.0, 1.0, 0.0, 1.0);    // Colore di arrivo (blu)
                 half4 c = lerpColor(start, end, interpolated);
-                //o.color = c;
+                o.color = c;
 
-                uint icol = _Colors[vid];
-                half4 col = half4(
-                    ((icol >> 16) & 0xff) / 255.0f,
-                    ((icol >>  8) & 0xff) / 255.0f,
-                    ((icol      ) & 0xff) / 255.0f,
-                1);  
+                //uint icol = _Colors[vid];
+                //half4 col = half4(
+                //    ((icol >> 16) & 0xff) / 255.0f,
+                //    ((icol >>  8) & 0xff) / 255.0f,
+                //    ((icol      ) & 0xff) / 255.0f,
+                //1);  
 
-                o.color = col;
+                //o.color = col;
 
                 return o;
             }

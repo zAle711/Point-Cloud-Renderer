@@ -31,8 +31,8 @@ public class RawPointCloudSubscriber : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        pointMaterial = new Material(Shader.Find("Custom/MyDefaultPoint"));
-        textInfo = GameObject.FindWithTag("Info").GetComponent<TextMeshProUGUI>();
+        pointMaterial = new Material(Shader.Find("Unlit/PointShader"));
+        //textInfo = GameObject.FindWithTag("Info").GetComponent<TextMeshProUGUI>();
 
         rosConnection = ROSConnection.GetOrCreateInstance();
         if (!readFromFile) 
@@ -152,7 +152,7 @@ public class RawPointCloudSubscriber : MonoBehaviour
         if (newMessage)
         {
             GetPointsAndColors();
-            textInfo.text = string.Format("Punti renderizzati: {0}", points.Length);
+            //textInfo.text = string.Format("Punti renderizzati: {0}", points.Length);
         }
     }
 

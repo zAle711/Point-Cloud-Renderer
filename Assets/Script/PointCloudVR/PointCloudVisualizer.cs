@@ -44,15 +44,24 @@ namespace PointCloudVR
         public PointCloudRenderer pcRenderer;
 
         void Start()
-        {        
-            if (Point_Cloud != "") PointCloudReader.ReadPCDFile(out pc, out pcQ, Point_Cloud, Quad_Size, invertYZ);
-            PointCloudReader.CreateFloor(GameObject.FindGameObjectWithTag("Floor"));
-            PointCloudReader.ReadPLYFile(out Vector3[] v, out int[] c, out Vector3[] n, out int[] t, Point_Cloud_Mesh, invertYZ);
+        {
+            if (Point_Cloud != "")
+            {
+                PointCloudReader.ReadPCDFile(out pc, out pcQ, Point_Cloud, Quad_Size, invertYZ);
+                PointCloudReader.CreateFloor(GameObject.FindGameObjectWithTag("Floor"));
+                pcRenderer.SetData(pc, pcQ);
 
-            pc_mesh = GameObject.FindGameObjectWithTag("PCMesh");
-            CreateMesh(v, c, n, t);         
+            }
+            if (Point_Cloud_Mesh != "")
+            {
+                PointCloudReader.ReadPLYFile(out Vector3[] v, out int[] c, out Vector3[] n, out int[] t, Point_Cloud_Mesh, invertYZ);
+                pc_mesh = GameObject.FindGameObjectWithTag("PCMesh");
+                CreateMesh(v, c, n, t);
+            }
 
-            //pcRenderer.SetData(pc, pcQ);
+   
+
+            
         }
 
         private void CreateMesh(Vector3[] v, int[] c, Vector3[] n, int[] t)

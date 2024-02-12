@@ -25,7 +25,6 @@ public class MenuActions : MonoBehaviour
         mesh_toggle.onValueChanged.AddListener(delegate { meshValueChanged(mesh_toggle); });
 
         point_cloud_render_dropdown = GameObject.Find("Dropdown_Render_Mode").GetComponent<TMP_Dropdown>();
-        Debug.Log($"Dio Cane {point_cloud_render_dropdown}");
         
         point_cloud_render_dropdown.onValueChanged.AddListener(delegate { dropdownValueChanged(point_cloud_render_dropdown); });
 

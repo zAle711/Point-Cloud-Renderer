@@ -129,10 +129,17 @@ namespace PointCloudVR
                     break;
             }
         }
-        
 
 
-        
+        private void OnDestroy()
+        {
+            pointsColors.Release();
+            pointsVertices.Release();
+            quadVertices.Release();
+            quadColors.Release();
+            quadNormals.Release();
+        }
+
     }
 
 }
