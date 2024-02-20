@@ -1,27 +1,8 @@
 using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using Unity.Mathematics;
 using UnityEngine;
-using System.Linq;
 
 namespace PointCloudVR
 {
-    public struct GizmoBox
-    {
-        public GizmoBox(Vector3 position, Vector3 size)
-        {
-            this.position = position;
-            this.size = size;
-        }
-
-        public Vector3 position { get; }
-        public Vector3 size { get; }
-
-        public override string ToString() => $"({position}, {size})";
-    }
-
     public static class Util
     {
         public static int encodeColor(int r, int g, int b)
@@ -30,24 +11,6 @@ namespace PointCloudVR
             encoded |= g << 8;
             encoded |= b;
             return encoded;
-        }
-
-        public static bool TestPlanesAABB(Plane[] planes, Bounds bounds)
-
-        {
-            for (int i = 0; i < 6; i++)
-            {
-                Plane plane = planes[i];
-                float3 normal_sign = math.sign(plane.normal);
-                float3 test_point = (float3)(bounds.center) + (bounds.extents * normal_sign);
-
-                float dot = math.dot(test_point, plane.normal);
-                if (dot + plane.distance < 0)
-                    return false;
-            }
-
-            return true;
-
         }
 
         public static void ZFace(Vector3 point, int color, Vector3 normal, float size, int currentIndex, ref Point[] quads)
