@@ -101,7 +101,6 @@ Shader "Unlit/PointShader" {
             //};
 
             //float _PointSize = 5.0f;
-            float4x4 _Transform;
             // StructuredBuffer<Point> _PointBuffer;
             StructuredBuffer<float3> _Positions;
             StructuredBuffer<uint> _Colors;

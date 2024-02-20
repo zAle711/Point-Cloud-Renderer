@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace PointCloudVR
 {
@@ -6,7 +7,7 @@ namespace PointCloudVR
     {
         public bool render;
 
-        private Material pointMaterial;
+        private Material material;
         private Material quadMaterial;
 
         private MeshTopology topology;
@@ -23,14 +24,16 @@ namespace PointCloudVR
 
         private int totalPoints = 0;
 
+        private CommandBuffer commandBuffer;
+
         private void Start()
         {
-            topology = MeshTopology.Quads;
-            render = true;
+            topology = MeshTopology.Points;
             point = Shader.Find("Unlit/PointShader");
             quad = Shader.Find("Unlit/QuadShader");
 
-            pointMaterial = new Material(point);
+            material = new Material(point);
+            commandBuffer = new CommandBuffer();
         }
 
         public void SetData(PointCloud pc, PointCloud pcQ)
@@ -56,28 +59,51 @@ namespace PointCloudVR
         {
             if (topology == MeshTopology.Points)
             {
-                pointMaterial.SetBuffer("_Positions", pointsVertices);
-                pointMaterial.SetBuffer("_Colors", pointsColors);
+                material.SetBuffer("_Positions", pointsVertices);
+                material.SetBuffer("_Colors", pointsColors);
                 totalPoints = pointsVertices.count;
             }
             else
             {
-                pointMaterial.SetBuffer("_Positions", quadVertices);
-                pointMaterial.SetBuffer("_Colors", quadColors);
-                pointMaterial.SetBuffer("_Normals", quadNormals);
+                material.SetBuffer("_Positions", quadVertices);
+                material.SetBuffer("_Colors", quadColors);
+                material.SetBuffer("_Normals", quadNormals);
                 totalPoints = quadVertices.count;
             }
-            
+
+            commandBuffer.Clear();
+            commandBuffer.DrawProcedural(Matrix4x4.identity, material, 0, topology, totalPoints, 1);
+
+        }
+
+        public void Render(bool render)
+        {
+            if (render)
+            {
+                Camera.main.AddCommandBuffer(CameraEvent.BeforeForwardOpaque, commandBuffer); 
+            } 
+            else
+            {
+                Camera.main.RemoveCommandBuffers(CameraEvent.BeforeForwardOpaque);
+            }
+
         }
 
         public void Render()
         {
             if (!render || totalPoints == 0) return;
 
-            pointMaterial.SetPass(0);
-            
-            Graphics.DrawProceduralNow(topology, totalPoints, 1);
+            //    pointMaterial.SetPass(0);
+
+            //    Graphics.DrawProceduralNow(topology, totalPoints, 1);
+
+            // Registra il comando di rendering nel Command Buffer
+
+
+            // Aggiungi il Command Buffer alla coda di rendering globale
+            Camera.main.AddCommandBuffer(CameraEvent.BeforeForwardOpaque, commandBuffer);
         }
+
         public void SetData(Vector3[] threadPoints, int[] threadColors, Vector3[] threadNormals, int totalPoints)
         {
             if (totalPoints == 0) return;
@@ -105,24 +131,21 @@ namespace PointCloudVR
                 quadNormals.SetData(normals);
             }
 
-            //SetPoints(points);
-            //SetColors(colors);
-            //SetNormals(normals);
-
             PrepareMaterial();
         }
-        public void SetTopology(RenderMode renderMode)
+
+        public void SetTopology(int topology)
         {
-            switch (renderMode)
+            switch (topology)
             {
-                case RenderMode.POINT:
-                    topology = MeshTopology.Points;
-                    pointMaterial = new Material(point);
+                case 0:
+                    this.topology = MeshTopology.Points;
+                    material = new Material(point);
                     PrepareMaterial();
                     break;
-                case RenderMode.QUAD:
-                    topology = MeshTopology.Quads;
-                    pointMaterial = new Material(quad);
+                case 1:
+                    this.topology = MeshTopology.Quads;
+                    material = new Material(quad);
                     PrepareMaterial();
                     break;
                 default:

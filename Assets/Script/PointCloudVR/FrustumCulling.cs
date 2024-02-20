@@ -5,6 +5,12 @@ using UnityEngine;
 
 namespace PointCloudVR
 {
+    public enum RenderMode
+    {
+        POINT,
+        QUAD
+    }
+
     class FrustumParams
     {
         
