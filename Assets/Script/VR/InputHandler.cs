@@ -40,7 +40,7 @@ public class InputHandler : MonoBehaviour
         {
             Debug.Log(rayInteractor.CollisionInfo.HasValue);
 
-            if (rayInteractor.CollisionInfo.HasValue && !waypointMenu.activeSelf)
+            if ( !waypointMenu.activeSelf && rayInteractor.CollisionInfo.HasValue)
             {
                 
                 waypointMenu.transform.position = Camera.main.transform.position + Camera.main.transform.forward * menuOffset;
@@ -50,7 +50,7 @@ public class InputHandler : MonoBehaviour
 
                 Vector3 waypoint = rayInteractor.CollisionInfo.Value.Point;
 
-                string text = $"Hai selezionato il punto: \n{waypoint}\n\nVuoi inviare la coordianta al robot?";
+                string text = $"Hai selezionato il punto: \n{waypoint}\nVuoi inviare la coordianta al robot?";
 
                 waypointMenu.transform.GetChild(0).GetChild(1).GetComponent<TextMeshProUGUI>().text = text;
                 waypointMenu.SetActive(true);

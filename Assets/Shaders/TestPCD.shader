@@ -8,7 +8,7 @@ Shader "Unlit/TestPCD"
     {
         Tags { "RenderType"="Opaque" }
         LOD 100
-        Cull off  
+        // Cull off  
 
         Pass
         {

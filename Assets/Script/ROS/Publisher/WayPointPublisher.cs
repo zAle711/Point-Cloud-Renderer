@@ -4,12 +4,12 @@ using PoseWithCovarianceMsg = RosMessageTypes.Geometry.PoseWithCovarianceMsg;
 using PoseMsg = RosMessageTypes.Geometry.PoseMsg;
 using RosMessageTypes.Geometry;
 
-public class WayPointPublisher
+public class WayPointPublisher : MonoBehaviour
 {
     private ROSConnection rosConnection;
     private string topicName = "/waypoint/test";
 
-    public WayPointPublisher()
+    public void Start()
     {
         rosConnection = ROSConnection.GetOrCreateInstance();
         rosConnection.RegisterPublisher<PoseWithCovarianceMsg>(topicName);

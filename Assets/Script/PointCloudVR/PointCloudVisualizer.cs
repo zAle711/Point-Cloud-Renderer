@@ -54,7 +54,7 @@ namespace PointCloudVR
             mesh.vertices = v;
             mesh.normals = n;
             mesh.triangles = t;
-            mesh.triangles = mesh.triangles.Reverse().ToArray();
+            //mesh.triangles = mesh.triangles.Reverse().ToArray();
             mesh.RecalculateBounds();
             mesh.RecalculateNormals();
 
