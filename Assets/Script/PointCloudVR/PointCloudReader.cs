@@ -40,28 +40,35 @@ namespace PointCloudVR
 
                 try
                 {
+
                     float x = float.Parse(coords[0], CultureInfo.InvariantCulture);
                     float y = float.Parse(coords[offsetY], CultureInfo.InvariantCulture);
                     float z = float.Parse(coords[offsetZ], CultureInfo.InvariantCulture);
-
-                    int color = int.Parse(coords[3]);
-
-                    float xn = float.Parse(coords[4], CultureInfo.InvariantCulture);
-                    float yn = float.Parse(coords[4 + offsetY], CultureInfo.InvariantCulture);
-                    float zn = float.Parse(coords[4 + offsetZ], CultureInfo.InvariantCulture);
-
                     Vector3 point_position = new Vector3(x, y, z);
-                    Vector3 point_normal = Util.GetNormalVector(xn, yn, zn);
+                    int color = int.Parse(coords[3]);
+                    if (coords.Length == 7)
+                    {
+                        
+
+                        float xn = float.Parse(coords[4], CultureInfo.InvariantCulture);
+                        float yn = float.Parse(coords[4 + offsetY], CultureInfo.InvariantCulture);
+                        float zn = float.Parse(coords[4 + offsetZ], CultureInfo.InvariantCulture);
+                        Vector3 point_normal = Util.GetNormalVector(xn, yn, zn);
+                        AddFaceWithNormal(point_position, color, point_normal, quadSize, 0, ref quad_face);
+                        qp.AddRange(quad_face.Select((o) => o.position));
+                        qc.AddRange(quad_face.Select((o) => o.color));
+                        qn.AddRange(quad_face.Select((o) => o.normal));
+
+                    }
+                             
 
 
                     p.Add(point_position);
                     c.Add(color);
                     
-                    AddFaceWithNormal(point_position, color, point_normal, quadSize, 0, ref quad_face);
+                    
 
-                    qp.AddRange(quad_face.Select((o) => o.position));
-                    qc.AddRange(quad_face.Select((o) => o.color));
-                    qn.AddRange(quad_face.Select((o) => o.normal));
+                    
 
                     UpdateMinMaxValues(point_position);
 
@@ -69,7 +76,7 @@ namespace PointCloudVR
                 catch  { }
 
             }
-
+            Debug.Log($"Point Cloud caricata: ");
             pc = new PointCloud(p.ToArray(), c.ToArray());
             pcQ = new PointCloud(qp.ToArray(), qc.ToArray(), qn.ToArray());
         }

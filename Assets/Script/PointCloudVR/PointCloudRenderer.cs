@@ -8,8 +8,6 @@ namespace PointCloudVR
         public bool render;
 
         private Material material;
-        private Material quadMaterial;
-
         private MeshTopology topology;
 
         private Shader point;
@@ -44,6 +42,7 @@ namespace PointCloudVR
             pointsVertices.SetData(pc.points);
             pointsColors.SetData(pc.colors);
 
+            if (pcQ.points.Length == 0) return;
             quadVertices = new ComputeBuffer(pcQ.points.Length, 3 * sizeof(float));
             quadColors = new ComputeBuffer(pcQ.colors.Length, sizeof(int));
             quadNormals = new ComputeBuffer(pcQ.normals.Length, 3 * sizeof(float));
@@ -87,51 +86,6 @@ namespace PointCloudVR
                 Camera.main.RemoveCommandBuffers(CameraEvent.BeforeForwardOpaque);
             }
 
-        }
-
-        public void Render()
-        {
-            if (!render || totalPoints == 0) return;
-
-            //    pointMaterial.SetPass(0);
-
-            //    Graphics.DrawProceduralNow(topology, totalPoints, 1);
-
-            // Registra il comando di rendering nel Command Buffer
-
-
-            // Aggiungi il Command Buffer alla coda di rendering globale
-            Camera.main.AddCommandBuffer(CameraEvent.BeforeForwardOpaque, commandBuffer);
-        }
-
-        public void SetData(Vector3[] threadPoints, int[] threadColors, Vector3[] threadNormals, int totalPoints)
-        {
-            if (totalPoints == 0) return;
-
-            Vector3[] points = new Vector3[totalPoints];
-            int[] colors = new int[totalPoints];
-            Vector3[] normals = topology == MeshTopology.Quads ? new Vector3[totalPoints] : null;
-
-            for(int i = 0; i < totalPoints; i++)
-            {
-                points[i] = threadPoints[i];
-                colors[i] = threadColors[i];
-                if (topology == MeshTopology.Quads) normals[i] = threadNormals[i];
-            }
-
-            pointsVertices = new ComputeBuffer(totalPoints, 3 * sizeof(float));
-            pointsColors = new ComputeBuffer(totalPoints, sizeof(int));
-
-            pointsVertices.SetData(points);
-            pointsColors.SetData(colors);
-
-            if (topology == MeshTopology.Quads)
-            {
-                quadNormals = new ComputeBuffer(totalPoints, 3 * sizeof(float));
-                quadNormals.SetData(normals);
-            }
-
-            PrepareMaterial();
         }
 
         public void SetTopology(int topology)

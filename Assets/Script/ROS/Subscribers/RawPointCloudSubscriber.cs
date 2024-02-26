@@ -1,13 +1,8 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-
 using Unity.Robotics.ROSTCPConnector;
 using PointCloud2Msg = RosMessageTypes.Sensor.PointCloud2Msg;
 using System;
-using TMPro;
-using System.IO;
-using System.Globalization;
+
 
 public class RawPointCloudSubscriber : MonoBehaviour
 {
@@ -24,7 +19,8 @@ public class RawPointCloudSubscriber : MonoBehaviour
     private int[] colors;
     private Material pointMaterial;
 
-    private TextMeshProUGUI textInfo;
+    ComputeBuffer positionsBuffer;
+    ComputeBuffer colorsBuffer;
 
     public bool readFromFile = false;
 
@@ -35,46 +31,21 @@ public class RawPointCloudSubscriber : MonoBehaviour
         //textInfo = GameObject.FindWithTag("Info").GetComponent<TextMeshProUGUI>();
 
         rosConnection = ROSConnection.GetOrCreateInstance();
-        if (!readFromFile) 
-            rosConnection.Subscribe<PointCloud2Msg>(topicName, OnMessageReceived);
-        else 
-            ReadFile();
+        rosConnection.Subscribe<PointCloud2Msg>(topicName, OnMessageReceived);
         
-    }
-
-    private void ReadFile()
-    {
-        string path = string.Format("Assets/Point Clouds txt/{0}.txt", "point_cloud_unreal_alg");
-        StreamReader inp_stm = new StreamReader(path);
-        bool InvertYZ = true;
-        int offsetY = InvertYZ ? 2 : 1;
-        int offsetZ = InvertYZ ? 1 : 2;
-
-        List<Vector3> all_points = new List<Vector3>();
-        List<int> all_colors = new List<int>();
-
-        while (!inp_stm.EndOfStream)
-        {
-            string inp_ln = inp_stm.ReadLine();
-            string[] coords = inp_ln.Split();
-
-            //if (!coords[0].Contains(".") || !coords[1].Contains(".") || !coords[2].Contains(".")) continue;
-
-            Vector3 point_position = new Vector3(float.Parse(coords[0], CultureInfo.InvariantCulture), float.Parse(coords[0 + offsetY], CultureInfo.InvariantCulture), float.Parse(coords[0 + offsetZ], CultureInfo.InvariantCulture));
-            all_points.Add(point_position);
-            all_colors.Add(encodeColor(255, 255, 255));
-            
-        }
-
-        points = all_points.ToArray();
-        colors = all_colors.ToArray();
-        textInfo.text = string.Format("Punti renderizzati: {0}", points.Length);
     }
 
     private void OnMessageReceived(PointCloud2Msg msg)
     {
         lastMessage = msg;
         newMessage = true;
+        GetPointsAndColors();
+
+        if (points.Length != 0 && colors.Length != 0)
+            InitializeMaterial();
+            
+
+        
     }
 
     private void GetPointsAndColors()
@@ -138,6 +109,34 @@ public class RawPointCloudSubscriber : MonoBehaviour
 
     }
 
+    private void InitializeMaterial()
+    {
+
+        if (positionsBuffer != null)
+            positionsBuffer.Release();
+        if (colorsBuffer != null)
+            colorsBuffer.Release();
+
+        positionsBuffer = new ComputeBuffer(points.Length, 3 * sizeof(float));
+        colorsBuffer = new ComputeBuffer(colors.Length, sizeof(int));
+        positionsBuffer.SetData(points);
+        colorsBuffer.SetData(colors);
+        pointMaterial.SetBuffer("_Positions", positionsBuffer);
+        pointMaterial.SetBuffer("_Colors", colorsBuffer);
+
+    }
+
+    private void OnRenderObject()
+    {
+        if (points != null && colors != null)
+        {
+            Debug.Log("REnderizzo!");
+            pointMaterial.SetPass(0);
+            Graphics.DrawProceduralNow(MeshTopology.Points, points.Length, 1);
+        }
+
+    }
+
     private int encodeColor(int r, int g, int b)
     {
         int encoded = r << 16;
@@ -149,40 +148,6 @@ public class RawPointCloudSubscriber : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (newMessage)
-        {
-            GetPointsAndColors();
-            //textInfo.text = string.Format("Punti renderizzati: {0}", points.Length);
-        }
     }
 
-    private void DrawPoints()
-    {
-        float pointSize = 1.0f;
-
-        if (points == null || colors == null)
-            return;
-
-        ComputeBuffer positionsBuffer = new ComputeBuffer(points.Length, 3 * sizeof(float));
-        ComputeBuffer colorsBuffer = new ComputeBuffer(colors.Length, sizeof(int));
-        positionsBuffer.SetData(points);
-        colorsBuffer.SetData(colors);
-        pointMaterial.SetMatrix("_Transform", transform.localToWorldMatrix);
-        pointMaterial.SetBuffer("_Positions", positionsBuffer);
-        pointMaterial.SetBuffer("_Colors", colorsBuffer);
-        pointMaterial.SetFloat("_PointSize", pointSize);
-        pointMaterial.SetPass(0);
-        Graphics.DrawProceduralNow(MeshTopology.Points, points.Length, 1);
-
-        positionsBuffer.Release();
-        colorsBuffer.Release();
-
-        newMessage = false;
-    }
-
-    private void OnRenderObject()
-    {
-        if (showPointCloud) 
-            DrawPoints();
-    }
 }

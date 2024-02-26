@@ -1,6 +1,4 @@
 using Oculus.Interaction;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 
@@ -8,13 +6,13 @@ public class InputHandler : MonoBehaviour
 {
     public GameObject mainMenu;
     public GameObject waypointMenu;
+    public GameObject cameraUI;
     public float menuOffset;
 
+    public WayPointPublisher waypointPub;
+    public ImageSubscriber imgSub;
     public RayInteractor rayInteractor;
-    // Start is called before the first frame update
-    void Start()
-    {
-    }
+
 
     // Update is called once per frame
     void Update()
@@ -38,7 +36,6 @@ public class InputHandler : MonoBehaviour
 
         if (OVRInput.GetDown(OVRInput.Button.Two))
         {
-            Debug.Log(rayInteractor.CollisionInfo.HasValue);
 
             if ( !waypointMenu.activeSelf && rayInteractor.CollisionInfo.HasValue)
             {
@@ -49,13 +46,47 @@ public class InputHandler : MonoBehaviour
                 waypointMenu.transform.rotation = Quaternion.Euler(rotationEuler);
 
                 Vector3 waypoint = rayInteractor.CollisionInfo.Value.Point;
-
+                waypointPub.setDestination(waypoint);
                 string text = $"Hai selezionato il punto: \n{waypoint}\nVuoi inviare la coordianta al robot?";
 
                 waypointMenu.transform.GetChild(0).GetChild(1).GetComponent<TextMeshProUGUI>().text = text;
                 waypointMenu.SetActive(true);
             }
-            //Debug.Log($"{rayInteractor.CollisionInfo.Value.Point}");
+            
+        }
+        
+        if (OVRInput.GetDown(OVRInput.Button.Three))
+        {
+            if (!cameraUI.activeSelf)
+            {
+                cameraUI.transform.position = Camera.main.transform.position + Camera.main.transform.forward * menuOffset;
+                Vector3 rotationEuler = Camera.main.transform.rotation.eulerAngles;
+                rotationEuler.z = 0;
+                cameraUI.transform.rotation = Quaternion.Euler(rotationEuler);
+            }
+               
+
+            cameraUI.SetActive(!cameraUI.activeSelf);
+        }
+
+        if (Input.GetKeyDown(KeyCode.P))
+        {
+            if (!cameraUI.activeSelf)
+            {
+                cameraUI.transform.position = Camera.main.transform.position + Camera.main.transform.forward * menuOffset;
+                Vector3 rotationEuler = Camera.main.transform.rotation.eulerAngles;
+                rotationEuler.z = 0;
+                cameraUI.transform.rotation = Quaternion.Euler(rotationEuler);
+                imgSub.Subscribe();
+            } else
+            {
+                imgSub.Unsubscribe();
+            }
+
+            cameraUI.SetActive(!cameraUI.activeSelf);
         }
     }
+
+
+    
 }

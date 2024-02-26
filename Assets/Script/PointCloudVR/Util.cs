@@ -12,7 +12,6 @@ namespace PointCloudVR
             encoded |= b;
             return encoded;
         }
-
         public static void ZFace(Vector3 point, int color, Vector3 normal, float size, int currentIndex, ref Point[] quads)
         {
 

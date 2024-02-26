@@ -5,14 +5,11 @@ public class PlayerController : MonoBehaviour
     public float speed = 5.0f;
     public float sensitivity = 5.0f;
     public GameObject waypointMenu;
-
-    private WayPointPublisher waypointPub;
     
     private LineRenderer line;
 
     private Ray ray;
 
-    private Vector3 selectedPosition;
     private void Start()
     {
 
@@ -28,25 +25,6 @@ public class PlayerController : MonoBehaviour
 
         //line.useWorldSpace = true;
         //waypointPub = new WayPointPublisher();
-    }
-
-    void FireRay()
-    {
-        ray = new Ray(transform.position, transform.forward);
-        RaycastHit hitData;
-        if (Physics.Raycast(ray, out hitData))
-        {
-            line.positionCount = 2;
-            Vector3 pos = transform.position;
-            pos.y -= 0.10f;
-            line.SetPosition(0, pos);
-            line.SetPosition(1, hitData.point);
-            selectedPosition = hitData.point;
-            //waypointPub.SendWaypoint(hitData.point);
-        } else
-        {
-            selectedPosition = Vector3.zero;
-        }
     }
 
     public void ConfirmButton()
@@ -65,22 +43,7 @@ public class PlayerController : MonoBehaviour
     {
         HandleMovement();
 
-        if (Input.GetKey(KeyCode.Mouse0))
-        {
-            FireRay();
-        }
-
-        if (Input.GetKeyUp(KeyCode.Mouse0))
-        {
-            line.positionCount = 0;
-            if (selectedPosition != Vector3.zero)
-            {
-                Debug.Log("Punto selezionato: " + selectedPosition);
-                waypointMenu.SetActive(true);
-                waypointMenu.transform.GetChild(0).GetComponent<TextMeshProUGUI>().text = $"Punto selezionato {selectedPosition} \n Vuoi inviare la coordinata al robot?";
-                
-            }
-        }
+       
     }
     private void HandleMovement()
     {
@@ -94,3 +57,7 @@ public class PlayerController : MonoBehaviour
         transform.eulerAngles += new Vector3(-mouseY * sensitivity, mouseX * sensitivity, 0);
     }
 }
+
+// progettazione e sviluppo di un ambiente in realtà virtuale per applicazioni di robotica immersiva
+// Application virutal in robotica
+//-> tecniche computer graphics per realtà virtuale (ricostruzione mesh partendo da punti, filtraggio e rendering punti )

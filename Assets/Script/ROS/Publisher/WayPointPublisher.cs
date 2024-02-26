@@ -9,21 +9,40 @@ public class WayPointPublisher : MonoBehaviour
     private ROSConnection rosConnection;
     private string topicName = "/waypoint/test";
 
+    private Vector3 destination;
+    private bool isDestinationSelected;
+
     public void Start()
     {
         rosConnection = ROSConnection.GetOrCreateInstance();
         rosConnection.RegisterPublisher<PoseWithCovarianceMsg>(topicName);
+        isDestinationSelected = false;
     }
 
-    public void SendWaypoint(Vector3 position)
+    public void setDestination(Vector3 destination)
     {
-        PoseWithCovarianceMsg msg = new PoseWithCovarianceMsg();
+        this.destination = destination;
+        isDestinationSelected = true;
+    }
 
-        Quaternion q = Quaternion.identity;
-        PointMsg pointMsg = new PointMsg(position.x, position.z, position.y);
-        QuaternionMsg quaternionMsg = new QuaternionMsg(q.x, q.y, q.z, q.w);
-        msg.pose = new PoseMsg(pointMsg, quaternionMsg);
+    public void removeSelection()
+    {
+        isDestinationSelected = false;
+    }
+    public void SendWaypoint()
+    {
+        if (isDestinationSelected)
+        {
+            Debug.Log("Invio il punto selezionato!");
+            PoseWithCovarianceMsg msg = new PoseWithCovarianceMsg();
 
-        rosConnection.Publish(topicName, msg);
+            Quaternion q = Quaternion.identity;
+            PointMsg pointMsg = new PointMsg(destination.x, destination.z, destination.y);
+            QuaternionMsg quaternionMsg = new QuaternionMsg(q.x, q.y, q.z, q.w);
+            msg.pose = new PoseMsg(pointMsg, quaternionMsg);
+
+            rosConnection.Publish(topicName, msg);
+        }
+       
     }
 }

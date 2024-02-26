@@ -63,7 +63,7 @@ Shader "Unlit/TestPCD"
                 half4 start = half4(0.0, 0.0, 1.0, 1.0);  // Colore di partenza (rosso)
                 half4 end = half4(0.0, 1.0, 0.0, 1.0);    // Colore di arrivo (blu)
                 half4 c = lerpColor(start, end, interpolated);
-                // o.color = c;
+                //o.color = c;
 
                 uint icol = _Colors[vid];
                 half4 col = half4(

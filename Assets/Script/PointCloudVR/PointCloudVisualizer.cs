@@ -1,8 +1,4 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using System.Linq;
 
 namespace PointCloudVR
 {
@@ -27,20 +23,15 @@ namespace PointCloudVR
             if (Point_Cloud != "")
             {
                 PointCloudReader.ReadPCDFile(out pc, out pcQ, Point_Cloud, Quad_Size, invertYZ);
-                //PointCloudReader.CreateFloor(GameObject.FindGameObjectWithTag("Floor"));
                 pcRenderer.SetData(pc, pcQ);
 
             }
             if (Point_Cloud_Mesh != "")
             {
-                PointCloudReader.ReadPLYFile(out Vector3[] v, out int[] c, out Vector3[] n, out int[] t, Point_Cloud_Mesh, invertYZ);
-                // pc_mesh = GameObject.FindGameObjectWithTag("PCMesh");
+                PointCloudReader.ReadPLYFile(out Vector3[] v, out int[] c, out Vector3[] n, out int[] t, Point_Cloud_Mesh, false);
                 CreateMesh(v, c, n, t);
             }
-
-   
-
-            
+     
         }
 
         private void CreateMesh(Vector3[] v, int[] c, Vector3[] n, int[] t)
@@ -54,7 +45,6 @@ namespace PointCloudVR
             mesh.vertices = v;
             mesh.normals = n;
             mesh.triangles = t;
-            //mesh.triangles = mesh.triangles.Reverse().ToArray();
             mesh.RecalculateBounds();
             mesh.RecalculateNormals();
 
@@ -68,7 +58,6 @@ namespace PointCloudVR
             mr.material = mat;
 
             mc.sharedMesh = mesh;
-            //pc_mesh.SetActive(false);
         }
 
         // Update is called once per frame
@@ -77,16 +66,6 @@ namespace PointCloudVR
             
         }
 
-
-        private void OnRenderObject()
-        {
-            //pcRenderer.Render();
-        }
-
-        private void OnPostRender()
-        {
-           //pcRenderer.Render();
-        }
     }
 
 }
