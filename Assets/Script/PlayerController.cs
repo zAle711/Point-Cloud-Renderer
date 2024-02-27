@@ -1,10 +1,14 @@
+using System;
 using TMPro;
 using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     public float speed = 5.0f;
     public float sensitivity = 5.0f;
-    public GameObject waypointMenu;
+
+    public float pointRadius = 5.0f;
+    public int renderCircles = 1;
+    public GameObject MeshTest;
     
     private LineRenderer line;
 
@@ -13,38 +17,41 @@ public class PlayerController : MonoBehaviour
     private void Start()
     {
 
-        //waypointMenu = GameObject.FindGameObjectWithTag("WaypointMenu");
-
-
-        line = GetComponent<LineRenderer>();
-        line.sortingOrder = 1;
-        line.startColor = Color.green;
-        line.endColor = Color.red;
-
-        Debug.Log(waypointMenu);
-
-        //line.useWorldSpace = true;
-        //waypointPub = new WayPointPublisher();
     }
-
-    public void ConfirmButton()
-    {
-        //waypointPub.SendWaypoint(selectedPosition);
-        waypointMenu.SetActive(false);
-    }
-
-    public void DeclineButton()
-    {
-        waypointMenu.SetActive(false);
-    }
-
     // Update is called once per frame
     void Update()
     {
         HandleMovement();
-
-       
+        InputHandler();
     }
+
+    private void InputHandler()
+    {
+        if (Input.GetKeyDown(KeyCode.P))
+        {
+            MeshTest.SetActive(!MeshTest.activeSelf);
+        }
+
+        if (Input.GetKeyDown(KeyCode.K))
+        {
+            foreach (MeshRenderer mr in MeshTest.transform.GetComponentsInChildren<MeshRenderer>())
+            {
+                mr.material.SetFloat("_PointSize", pointRadius);
+            }
+            
+        }
+       
+        if (Input.GetKeyDown(KeyCode.L))
+        {
+            foreach (MeshRenderer mr in MeshTest.transform.GetComponentsInChildren<MeshRenderer>())
+            {
+                mr.material.SetInt("_Circles", renderCircles);
+            }
+           
+        }
+
+    }
+
     private void HandleMovement()
     {
         // Move the camera forward, backward, left, and right

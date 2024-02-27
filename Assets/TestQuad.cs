@@ -1,7 +1,7 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
 using PointCloudVR;
+using System.Linq;
+using UnityEngine;
+
 public class TestQuad : MonoBehaviour
 {
     // Start is called before the first frame update
@@ -24,53 +24,90 @@ public class TestQuad : MonoBehaviour
 
         PointCloudReader.ReadPCDFile(out pc, out pcq, fileName, 0.5f, true);
 
-        material = new Material(Shader.Find("Custom/Quad4PointScreenSizeShader"));
-        material.enableInstancing = true;
-        material.SetFloat("_PointSize", pointRadius);
-        material.SetInt("_Circles", renderCircles ? 1 : 0);
-        Rect screen = Camera.main.pixelRect;
-        material.SetInt("_ScreenWidth", (int)screen.width);
-        material.SetInt("_ScreenHeight", (int)screen.height);
-
-        CreateMesh();
-
-        //material = new Material(Shader.Find("Custom/QuadGeoScreenSizeShader"));
-        //Rect screen = Camera.main.pixelRect;
+        //material = new Material(Shader.Find("Custom/Quad4PointScreenSizeShader"));
         //material.enableInstancing = true;
         //material.SetFloat("_PointSize", pointRadius);
         //material.SetInt("_Circles", renderCircles ? 1 : 0);
+        //Rect screen = Camera.main.pixelRect;
         //material.SetInt("_ScreenWidth", (int)screen.width);
         //material.SetInt("_ScreenHeight", (int)screen.height);
-        //Debug.Log(material);
-        //CreateMeshGeometry();
-        //Debug.Log($"Lunghezza point Cloud: {pc.points.Length}");
+
+        //CreateMesh();
+
+        //material = new Material(Shader.Find("Custom/QuadGeoScreenSizeShader"));
+
+        material = new Material(Shader.Find("Custom/QuadGeoWorldSizeShader"));
+
+        //Rect screen = Camera.main.pixelRect;
+        material.enableInstancing = true;
+        material.SetFloat("_PointSize", pointRadius);
+        material.SetInt("_Circles", renderCircles ? 1 : 0);
+        //material.SetInt("_ScreenWidth", (int)screen.width);
+        //material.SetInt("_ScreenHeight", (int)screen.height);
+        CreateMeshGeometry();
+        Debug.Log($"Lunghezza point Cloud: {pc.points.Length}");
     }
-
-    void CreateMeshGeometry()
+    void CreateMeshGameObject(int i, Vector3[] points, int[] colors)
     {
+        GameObject go = new GameObject($"Mesh-{i}");
+        go.transform.parent = transform;
+
+        MeshFilter mf = go.AddComponent<MeshFilter>();
+        MeshRenderer mr = go.AddComponent<MeshRenderer>();
         Mesh mesh = new Mesh();
-
-        //mf = gameObject.AddComponent<MeshFilter>();
-        //mr = gameObject.AddComponent<MeshRenderer>();
-        
-        
-
-        int[] indecies = new int[pc.points.Length];
-        Color[] colors = new Color[pc.colors.Length];
-        for (int i = 0; i < pc.points.Length; ++i)
+        int[] indecies = new int[points.Length];
+        Color[] colorss = new Color[colors.Length];
+        for (int j = 0; j < points.Length; ++j)
         {
-            indecies[i] = i;
-            colors[i] = getColor(pc.colors[i]);
+            indecies[j] = j;
+            colorss[j] = getColor(colors[j]);
         }
-        mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
-        mesh.vertices = pc.points;
-        mesh.colors = colors;
+
+        mesh.vertices = points;
+        mesh.colors = colorss;
         mesh.SetIndices(indecies, MeshTopology.Points, 0);
+
+
 
         mf.mesh = mesh;
         mr.material = material;
 
-        mc.sharedMesh = mesh;
+    }
+    void CreateMeshGeometry()
+    {
+        int MAX_VERTICES = 65000;
+        //MAX_VERTICES /= 4;
+        int nGO = 1 + (pc.points.Length - 1) / MAX_VERTICES;
+        for (int i = 0; i < nGO; i++)
+        {
+            var points = pc.points.Skip(i * MAX_VERTICES).Take(MAX_VERTICES).ToArray();
+            var colors = pc.colors.Skip(i * MAX_VERTICES).Take(MAX_VERTICES).ToArray();
+            CreateMeshGameObject(i, points, colors);
+        }
+
+        //Mesh mesh = new Mesh();
+
+        ////mf = gameObject.AddComponent<MeshFilter>();
+        ////mr = gameObject.AddComponent<MeshRenderer>();
+        
+        
+
+        //int[] indecies = new int[pc.points.Length];
+        //Color[] colorss = new Color[pc.colors.Length];
+        //for (int i = 0; i < pc.points.Length; ++i)
+        //{
+        //    indecies[i] = i;
+        //    colorss[i] = getColor(pc.colors[i]);
+        //}
+        //mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+        //mesh.vertices = pc.points;
+        //mesh.colors = colorss;
+        //mesh.SetIndices(indecies, MeshTopology.Points, 0);
+
+        //mf.mesh = mesh;
+        //mr.material = material;
+
+        //mc.sharedMesh = mesh;
     }
 
     void CreateMesh()
