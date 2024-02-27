@@ -15,6 +15,74 @@ namespace PointCloudVR
         private static float minZ = float.MaxValue;
         private static float maxZ = float.MinValue;
 
+        public static Color getColor(int c)
+        {
+            float r = ((c >> 16) & 0xff) / 255.0f;
+            float g = ((c >> 8) & 0xff) / 255.0f;
+
+            float b = (c & 0xff) / 255.0f;
+
+            return new Color(r, g, b, 1);
+        }
+
+        public static (Vector3[], Color[]) ReadPCDFile(string fileName, bool invertXY = true)
+        {
+            int HEADER_SIZE = 11;
+           
+            List<Vector3> p = new List<Vector3>();
+            List<Color> c = new List<Color>();
+
+            string filePath = Path.Combine("D:/VR_Training/PointCloud", fileName);
+
+            StreamReader inp_stm = new StreamReader(filePath);
+           
+            int offsetY = invertXY ? 2 : 1;
+            int offsetZ = invertXY ? 1 : 2;
+            int i = 0;
+            int pointCloudSize = 0;
+            while (i < HEADER_SIZE)
+            {
+                string inp_ln = inp_stm.ReadLine();
+                string[] coords = inp_ln.Split();
+
+                if (coords[0] == "POINTS")
+                {
+                    pointCloudSize = int.Parse(coords[1]);
+                }
+
+                i += 1;
+            }
+
+            Vector3[] points = new Vector3[pointCloudSize];
+            Color[] colors = new Color[pointCloudSize];
+
+            i = 0;
+            while (!inp_stm.EndOfStream)
+            {
+                string inp_ln = inp_stm.ReadLine();
+                string[] coords = inp_ln.Split(); 
+
+                try
+                {
+
+                    float x = float.Parse(coords[0], CultureInfo.InvariantCulture);
+                    float y = float.Parse(coords[offsetY], CultureInfo.InvariantCulture);
+                    float z = float.Parse(coords[offsetZ], CultureInfo.InvariantCulture);
+                    Vector3 point_position = new Vector3(x, y, z);
+                    int color = int.Parse(coords[3]);
+
+                    points[i] = point_position;
+                    colors[i] = getColor(color);
+
+                    i += 1;
+                }
+                catch { }
+            }
+            Debug.Log($"Point Cloud Size: {pointCloudSize} points Length: {points.Length} colors Length: {colors.Length}");
+            return (points, colors);
+            
+        }
+
         public static void ReadPCDFile(out PointCloud pc, out PointCloud pcQ, string fileName, float quadSize, bool invertXY = true)
         {
 

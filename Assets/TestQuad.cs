@@ -22,7 +22,7 @@ public class TestQuad : MonoBehaviour
 
         PointCloud pcq;
 
-        PointCloudReader.ReadPCDFile(out pc, out pcq, fileName, 0.5f, true);
+        //PointCloudReader.ReadPCDFile(out pc, out pcq, fileName, 0.5f, true);
 
         //material = new Material(Shader.Find("Custom/Quad4PointScreenSizeShader"));
         //material.enableInstancing = true;
@@ -44,7 +44,7 @@ public class TestQuad : MonoBehaviour
         material.SetInt("_Circles", renderCircles ? 1 : 0);
         //material.SetInt("_ScreenWidth", (int)screen.width);
         //material.SetInt("_ScreenHeight", (int)screen.height);
-        CreateMeshGeometry();
+        //CreateMeshGeometry();
         Debug.Log($"Lunghezza point Cloud: {pc.points.Length}");
     }
     void CreateMeshGameObject(int i, Vector3[] points, int[] colors)

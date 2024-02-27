@@ -15,6 +15,9 @@ namespace PointCloudVR
         private PointCloud pc;
         private PointCloud pcQ;
 
+        private Vector3[] points;
+        private Color[] colors;
+
         public PointCloudRenderer pcRenderer;
         public GameObject pcMesh;
 
@@ -22,8 +25,12 @@ namespace PointCloudVR
         {
             if (Point_Cloud != "")
             {
-                PointCloudReader.ReadPCDFile(out pc, out pcQ, Point_Cloud, Quad_Size, invertYZ);
-                pcRenderer.SetData(pc, pcQ);
+                (points, colors) = PointCloudReader.ReadPCDFile(Point_Cloud, invertYZ);
+                pcRenderer.CreateMeshFromPointCloud(points, colors);
+
+                Debug.Log($"{points[0]} - {points[12323]}");
+                //PointCloudReader.ReadPCDFile(out pc, out pcQ, Point_Cloud, Quad_Size, invertYZ);
+                //pcRenderer.SetData(pc, pcQ);
 
             }
             if (Point_Cloud_Mesh != "")
