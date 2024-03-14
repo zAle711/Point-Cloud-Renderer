@@ -12,6 +12,7 @@ TagManager:
   - WaypointMenu
   - PCMesh
   - PointCloud
+  - Enviroment
   layers:
   - Default
   - TransparentFX

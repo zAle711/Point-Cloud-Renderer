@@ -168,10 +168,9 @@ public class PointOctree<T> {
 		return objects;
 	}
 
-	public List<Chunk> CalculatePointsInsideFrustum(Plane[] planes, Vector3 cameraPosition ,int maxGameObject, ref PriorityQueue<Chunk> toRender, ref PriorityQueue<Chunk> toDelete, ref List<Chunk> currentRendering)
+	public void CalculatePointsInsideFrustum(Plane[] planes, Vector3 cameraPosition ,int count, ref PriorityQueue<Chunk> toRender, ref PriorityQueue<Chunk> toDelete, ref List<Chunk> currentRendering, ref Bounds[] visibleNodeBounds)
 	{
-		List<Chunk> result = new List<Chunk>(maxGameObject);
-		rootNode.CalculatePointsInsideFrustum(planes, maxGameObject, cameraPosition, result, ref toRender, ref toDelete, ref currentRendering);
+		rootNode.CalculatePointsInsideFrustum(planes, count, cameraPosition, ref toRender, ref toDelete, ref currentRendering, ref visibleNodeBounds);
 
 		if (currentRendering.Count != 0)
 		{
@@ -182,7 +181,6 @@ public class PointOctree<T> {
             }
         }
 
-        return result;
  	}
 	
 

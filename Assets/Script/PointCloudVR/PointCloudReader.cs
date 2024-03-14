@@ -63,12 +63,13 @@ namespace PointCloudVR
 
                     points[i] = point_position;
                     colors[i] = Util.getColor(color);
-
+                    UpdateMinMaxValues(point_position);
                     i += 1;
                 }
                 catch { }
             }
             Debug.Log($"Point Cloud Size: {pointCloudSize} points Length: {points.Length} colors Length: {colors.Length}");
+            CreateFloor();
             return (points, colors);
             
         }
@@ -166,23 +167,25 @@ namespace PointCloudVR
             minZ = minZ < point.z ? minZ : point.z;
         }
 
-        public static void CreateFloor (GameObject floor)
+        public static void CreateFloor ()
         {
+            GameObject prefab = Resources.Load("Floor", typeof(GameObject)) as GameObject;
+            GameObject floor = UnityEngine.Object.Instantiate(prefab, Vector3.zero, Quaternion.identity, GameObject.FindWithTag("Enviroment").transform);
             Vector3[] v = new Vector3[4];
-
+            float offset = 1.5f;
             if (maxX == float.MinValue || minX == float.MaxValue || minY == float.MaxValue || maxZ == float.MinValue || minZ == float.MaxValue)
             {
                 return;
             }
 
-            v[0] = new Vector3(minX, minY - 0.00f, minZ);
-            v[1] = new Vector3(minX, minY - 0.00f, maxZ);
-            v[2] = new Vector3(maxX, minY + 0.1f, maxZ);
-            v[3] = new Vector3(maxX, minY + 0.1f, minZ);
-            
+            v[0] = new Vector3(minX - offset, minY - 0.25f, minZ - offset);
+            v[1] = new Vector3(minX - offset, minY - 0.25f, maxZ + offset);
+            v[2] = new Vector3(maxX + offset, minY - 0.25f, maxZ + offset);
+            v[3] = new Vector3(maxX + offset, minY - 0.25f, minZ - offset);
             
             MeshFilter meshFilter = floor.GetComponent<MeshFilter>();
             MeshCollider meshCollider = floor.GetComponent<MeshCollider>();
+            
             Mesh mesh = new Mesh();
             mesh.vertices = v;
             mesh.triangles = new int[6] { 0, 1, 3, 1, 2, 3 };

@@ -20,12 +20,7 @@ public class PriorityQueue<T> where T : Chunk
     {
         if (uniqueGO.Contains(item.gObj))
         {
-            int index = itemIndices[item];
-            T chunk = items[index];
-            if (chunk.priority == item.priority) return;
-            
-            chunk.priority = item.priority;
-            HeapifyUp(index);
+            UpdatePriority(item);
         } else
         {
             items.Add(item);
@@ -34,7 +29,6 @@ public class PriorityQueue<T> where T : Chunk
             HeapifyUp(Count - 1);
             uniqueGO.Add(item.gObj);
         }
-
         
     }
 
@@ -79,6 +73,13 @@ public class PriorityQueue<T> where T : Chunk
             parentIndex = (index - 1) / 2;
         }
     }
+
+    public void Clear()
+    {
+        items.Clear();
+        itemIndices.Clear();
+    }
+
 
     private void HeapifyDown(int index)
     {

@@ -24,7 +24,7 @@ public class PointOctreeNode<T> {
 	// Child nodes, if any
 	PointOctreeNode<T>[] children = null;
 
-	List<Chunk> childObjects = new List<Chunk>();
+	private List<Chunk> childObjects = new List<Chunk>();
 
 	bool HasChildren { get { return children != null; } }
 
@@ -206,33 +206,31 @@ public class PointOctreeNode<T> {
 		}
 	}
 
-    public void CalculatePointsInsideFrustum(Plane[] planes, int maxGameObjects, Vector3 cameraPosition, List<Chunk> result, ref PriorityQueue<Chunk> toRender, ref PriorityQueue<Chunk> toDelete, ref List<Chunk> currentRendering)
+    public void CalculatePointsInsideFrustum(Plane[] planes, int count, Vector3 cameraPosition, ref PriorityQueue<Chunk> toRender, ref PriorityQueue<Chunk> toDelete, ref List<Chunk> currentRendering, ref Bounds[] visibleNodeBounds)
 	{
 		if (!Util.TestPlanesAABB(planes, bounds)) return;
-		if (result.Count == maxGameObjects) return;
-
-		float distance = Vector3.Distance(cameraPosition, bounds.center);
+		if (count == visibleNodeBounds.Length) return;
 		
 		if (objects.Count  != 0)
 		{
-            foreach (Chunk obj in childObjects)
+            //foreach (Chunk c in childObjects)
+			for(int i = 0; i < childObjects.Count; i++)
             {
-				if (currentRendering.Contains(obj))
+				//visibleNodeBounds.Add(childObjects[i].bounds);
+				visibleNodeBounds[count] = childObjects[i].bounds;
+				if (currentRendering.Contains(childObjects[i]))
 				{
-					currentRendering.Remove(obj);
+					currentRendering.Remove(childObjects[i]);
+					
 					continue;
 				}
 
-				Chunk newChunk = obj;
-				toRender.Enqueue(newChunk);
-                
-				
-				
-				
-				//result.Add(newChunk);
+				childObjects[i].priority =  Vector3.Distance(cameraPosition, childObjects[i].position);
+				toRender.Enqueue(childObjects[i]);
 
-                if (result.Count == maxGameObjects) return;
-            }
+				count += 1;
+				if (count == visibleNodeBounds.Length) return;
+			}
         } 
 		
 
@@ -240,7 +238,7 @@ public class PointOctreeNode<T> {
 		{
 			for( int i = 0; i < 8; i++)
 			{
-				children[i].CalculatePointsInsideFrustum(planes, maxGameObjects, cameraPosition, result, ref toRender, ref toDelete, ref currentRendering);
+				children[i].CalculatePointsInsideFrustum(planes, count, cameraPosition, ref toRender, ref toDelete, ref currentRendering, ref visibleNodeBounds);
 				
 				// Debug.Log(Vector3.Distance(cameraPosition, Center));
 			}
@@ -264,7 +262,7 @@ public class PointOctreeNode<T> {
             {
 
                 Point[] point_cloud_slice = points.Skip(i * MAX_VERTICES).Take(MAX_VERTICES).ToArray();
-                CreateMeshGameObject(point_cloud_slice, parent, material, result, depth, ref counter);
+                CreateMeshGameObject(point_cloud_slice, parent, material, bounds.center, result, depth, ref counter);
             }
         }
 
@@ -278,7 +276,7 @@ public class PointOctreeNode<T> {
 
     }
 
-	private void CreateMeshGameObject(Point[] point_cloud_slice, Transform parent, Material material, List<GameObject> result, int depth, ref int counter)
+	private void CreateMeshGameObject(Point[] point_cloud_slice, Transform parent, Material material, Vector3 positionInOctree,List<GameObject> result, int depth, ref int counter)
 	{
         GameObject go = new GameObject($"PC_Mesh {counter}:{depth}");
 		go.transform.parent = parent;
@@ -303,7 +301,7 @@ public class PointOctreeNode<T> {
 
 		go.SetActive(false);
 		result.Add(go);
-		childObjects.Add(new Chunk(go, -1));
+		childObjects.Add(new Chunk(go, positionInOctree, bounds));
     }
 
 	/// <summary>

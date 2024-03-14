@@ -1,5 +1,5 @@
 using PointCloudVR;
-using System.Collections;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
@@ -15,6 +15,8 @@ public class TraversalParams
     public PriorityQueue<Chunk> toDelete = new PriorityQueue<Chunk>();
     public List<Chunk> currentRendering = new List<Chunk>();
 
+    public DateTime lastUpdate;
+    public Bounds[] visibleNodesBounds;
     public bool running = true;
 }
 
@@ -29,7 +31,7 @@ public class OctreeTraversal
     {
         this.octree = octree;
         traversalParams = new TraversalParams();
-
+        traversalParams.lastUpdate = DateTime.Now;
         traversalParams.maxObjectToRender = maxPointsToRender;
         traversalParams.running = true;
         thread = new Thread(new ParameterizedThreadStart(ComputeVisiblePoints));
@@ -55,44 +57,61 @@ public class OctreeTraversal
         }
     }
 
-    public (PriorityQueue<Chunk>, PriorityQueue<Chunk>) getQueues()
+    public DateTime GetLastUpdate()
+    {
+        lock(traversalParams)
+        {
+            return traversalParams.lastUpdate;
+        }
+    }
+
+    public (PriorityQueue<Chunk>, PriorityQueue<Chunk>, Bounds[]) getData()
     {
         lock (traversalParams) 
         {
-            return (traversalParams.toRender, traversalParams.toDelete);
+            return (traversalParams.toRender, traversalParams.toDelete, traversalParams.visibleNodesBounds);
         }
     }
 
     private void ComputeVisiblePoints(object obj)
     {
         TraversalParams p = (TraversalParams)obj;
+        PriorityQueue<Chunk> toRender = new PriorityQueue<Chunk>();
+        PriorityQueue<Chunk> toDelete = new PriorityQueue<Chunk>();
 
-        while(p.running)
+        Plane[] frustumPlanes;
+        Vector3 cameraPosition;
+        int maxObjToRender;
+        List<Chunk> currentRendering = new List<Chunk>();
+
+        while (p.running)
         {
-            Plane[] frustumPlanes;
-            Vector3 cameraPosition;
-            int maxObjToRender;
-            List<Chunk> currentRendering;
+           
             lock (p)
             {
                 frustumPlanes = p.frustumPlanes;
                 cameraPosition = p.cameraPosition;
                 maxObjToRender  = p.maxObjectToRender;
-                currentRendering = new List<Chunk>(p.currentRendering);
+                currentRendering = p.currentRendering.Count != 0 ? new List<Chunk>(p.currentRendering) : new List<Chunk>();
 
             }
 
-            PriorityQueue<Chunk> toRender = new PriorityQueue<Chunk>();
-            PriorityQueue<Chunk> toDelete = new PriorityQueue<Chunk> ();
+            toRender.Clear();
+            toDelete.Clear();
+
+            Bounds[] visibleNodeBounds = new Bounds[maxObjToRender];
 
 
-            List<Chunk> visibleChunks = octree.CalculatePointsInsideFrustum(frustumPlanes, cameraPosition, maxObjToRender, ref toRender, ref toDelete, ref currentRendering);
+            octree.CalculatePointsInsideFrustum(frustumPlanes, cameraPosition, 0, ref toRender, ref toDelete, ref currentRendering, ref visibleNodeBounds);
 
 
             lock (p)
             {
                 p.toRender = toRender;
                 p.toDelete = toDelete;
+                p.visibleNodesBounds = visibleNodeBounds;
+                p.lastUpdate = DateTime.Now;
+
             }
 
 

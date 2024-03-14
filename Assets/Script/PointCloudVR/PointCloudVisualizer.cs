@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -13,6 +14,8 @@ namespace PointCloudVR
         public string Point_Cloud_Mesh = "";
         public float Quad_Size = 0.15f;
         public bool invertYZ = false;
+        public int maxGameObject = 100;
+        
         public TextMeshProUGUI text;
         public Camera myCamera;
 
@@ -25,16 +28,20 @@ namespace PointCloudVR
 
         private OctreeTraversal octreeTraversal;
 
+
         private PriorityQueue<Chunk> toRender = new PriorityQueue<Chunk>();
         private PriorityQueue<Chunk> toDelete = new PriorityQueue<Chunk>();
-        private List<Chunk> currentRendering = new List<Chunk>();
-        private bool empty = true;
+        private DateTime lastUpdate;
 
+        private List<Chunk> currentRendering = new List<Chunk>();
+        private Bounds[] visibleNodeBounds;
         //Mesh
         public GameObject pcMesh;
 
         void Start()
         {
+            visibleNodeBounds = new Bounds[maxGameObject];
+            lastUpdate = DateTime.Now;
             if (Point_Cloud != "")
             {
                 PrepareMaterial();
@@ -42,7 +49,7 @@ namespace PointCloudVR
                 CreateOctree();
                 //pcRenderer.CreateMeshFromPointCloud(points, colors);
 
-                octreeTraversal = new OctreeTraversal(pointCloudOctree, 100);
+                octreeTraversal = new OctreeTraversal(pointCloudOctree, maxGameObject);
                 octreeTraversal.setData(GeometryUtility.CalculateFrustumPlanes(myCamera), myCamera.transform.position);
                 octreeTraversal.Start();
 
@@ -66,12 +73,16 @@ namespace PointCloudVR
             for (; ;)
             {
 
-                if (toRender.Count != 0)
+                if (currentRendering.Count != maxGameObject)
                 {
-                    Chunk c = toRender.Dequeue();
-                    c.gObj.SetActive(true);
-                    currentRendering.Add(c);
+                    if (toRender.Count != 0)
+                    {
+                        Chunk c = toRender.Dequeue();
+                        c.gObj.SetActive(true);
+                        currentRendering.Add(c);
+                    }
                 }
+
 
                 if (toDelete.Count != 0)
                 {
@@ -104,7 +115,7 @@ namespace PointCloudVR
                 pointCloud[i] = new Point(points[i], colors[i]);
             }
 
-            pointCloudOctree = new PointOctree<Point>(5f, Vector3.zero, 5);
+            pointCloudOctree = new PointOctree<Point>(25f, Vector3.zero, 5);
 
             foreach (Point point in pointCloud)
             {
@@ -145,17 +156,13 @@ namespace PointCloudVR
             octreeTraversal.setData(GeometryUtility.CalculateFrustumPlanes(myCamera), myCamera.transform.position);
             octreeTraversal.setQueues(toRender, toDelete, currentRendering);
 
-            if (toRender.Count == 0 || toDelete.Count == 0)
+            if (lastUpdate != octreeTraversal.GetLastUpdate())
             {
-                (toRender, toDelete) = octreeTraversal.getQueues();
-               
+                (toRender, toDelete, visibleNodeBounds) = octreeTraversal.getData();
             }
-
 
             text.text = $"toRender: {toRender.Count} -- toDelete: {toDelete.Count} -- currentRendering: {currentRendering.Count}";
         }
-
-
 
         private void PrepareMaterial()
         {
@@ -174,6 +181,18 @@ namespace PointCloudVR
         private void OnApplicationQuit()
         {
             octreeTraversal.Stop();
+        }
+
+        private void OnDrawGizmos()
+        {
+            if (visibleNodeBounds == null) return;
+
+            Gizmos.color = Color.red;
+            for(int i = 0; i < visibleNodeBounds.Length; i++)
+            {
+                if (visibleNodeBounds[i] == null) break;
+                Gizmos.DrawWireCube(visibleNodeBounds[i].center, visibleNodeBounds[i].size);
+            }
         }
     }
 
