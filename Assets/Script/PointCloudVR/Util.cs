@@ -9,7 +9,6 @@ namespace PointCloudVR
     {
         public GameObject gObj { get; private set; }
         public Vector3 position { get; private set; }
-        public float priority { get; set; }
         public Bounds bounds { get; private set; }
 
         public Chunk(GameObject gObj, Vector3 position,Bounds bounds)
@@ -19,12 +18,11 @@ namespace PointCloudVR
             this.bounds = bounds;
         }
 
-        public Chunk(GameObject gObj, Bounds bounds, float priority)
+        public Chunk(GameObject gObj, Bounds bounds)
         {
             this.gObj = gObj;
             position = gObj.transform.position;
             this.bounds = bounds;
-            this.priority = priority;
         }
     }
 

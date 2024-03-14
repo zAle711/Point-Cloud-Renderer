@@ -1,3 +1,4 @@
+using Priority_Queue;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -29,9 +30,11 @@ namespace PointCloudVR
         private OctreeTraversal octreeTraversal;
 
 
-        private PriorityQueue<Chunk> toRender = new PriorityQueue<Chunk>();
-        private PriorityQueue<Chunk> toDelete = new PriorityQueue<Chunk>();
+        private SimplePriorityQueue<Chunk> toRender = new SimplePriorityQueue<Chunk>();
+        private SimplePriorityQueue<Chunk> toDelete = new SimplePriorityQueue<Chunk>();
         private DateTime lastUpdate;
+        
+        private SimplePriorityQueue<Chunk> nowRendering = new SimplePriorityQueue<Chunk>();
 
         private List<Chunk> currentRendering = new List<Chunk>();
         private Bounds[] visibleNodeBounds;
@@ -46,18 +49,15 @@ namespace PointCloudVR
             {
                 PrepareMaterial();
                 (points, colors) = PointCloudReader.ReadPCDFile(Point_Cloud, invertYZ);
+
                 CreateOctree();
-                //pcRenderer.CreateMeshFromPointCloud(points, colors);
+                CreateGameObjects();
 
                 octreeTraversal = new OctreeTraversal(pointCloudOctree, maxGameObject);
                 octreeTraversal.setData(GeometryUtility.CalculateFrustumPlanes(myCamera), myCamera.transform.position);
                 octreeTraversal.Start();
 
-                CreateGameObjects();
-
                 StartCoroutine(RenderChunks());
-                //PointCloudReader.ReadPCDFile(out pc, out pcQ, Point_Cloud, Quad_Size, invertYZ);
-                //pcRenderer.SetData(pc, pcQ);
 
             }
             if (Point_Cloud_Mesh != "")

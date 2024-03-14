@@ -1,4 +1,5 @@
 ﻿using PointCloudVR;
+using Priority_Queue;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -168,7 +169,7 @@ public class PointOctree<T> {
 		return objects;
 	}
 
-	public void CalculatePointsInsideFrustum(Plane[] planes, Vector3 cameraPosition ,int count, ref PriorityQueue<Chunk> toRender, ref PriorityQueue<Chunk> toDelete, ref List<Chunk> currentRendering, ref Bounds[] visibleNodeBounds)
+	public void CalculatePointsInsideFrustum(Plane[] planes, Vector3 cameraPosition ,int count, ref SimplePriorityQueue<Chunk> toRender, ref SimplePriorityQueue<Chunk> toDelete, ref List<Chunk> currentRendering, ref Bounds[] visibleNodeBounds)
 	{
 		rootNode.CalculatePointsInsideFrustum(planes, count, cameraPosition, ref toRender, ref toDelete, ref currentRendering, ref visibleNodeBounds);
 
@@ -176,20 +177,18 @@ public class PointOctree<T> {
 		{
             foreach (Chunk obj in currentRendering)
             {
-				obj.priority = Vector3.Distance(cameraPosition, obj.position);
-                toDelete.Enqueue(obj);
+				float priority = Vector3.Distance(cameraPosition, obj.position);
+                toDelete.Enqueue(obj, priority);
             }
         }
 
  	}
 	
 
-	public List<GameObject> CreateMesh(Transform parent, Material material)
+	public void CreateMesh(Transform parent, Material material)
 	{
-		List<GameObject> objects = new List<GameObject>();
 		int counter = 0;
-		rootNode.CreateMesh(objects, parent, material, 0, ref counter);
-		return objects;
+		rootNode.CreateMesh(parent, material, ref counter);
 	}
 
 	/// <summary>

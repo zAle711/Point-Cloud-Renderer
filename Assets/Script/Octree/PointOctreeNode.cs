@@ -1,7 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using PointCloudVR;
+using Priority_Queue;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using PointCloudVR;
 
 // A node in a PointOctree
 // Copyright 2014 Nition, BSD licence (see LICENCE file). www.momentstudio.co.nz
@@ -24,7 +25,7 @@ public class PointOctreeNode<T> {
 	// Child nodes, if any
 	PointOctreeNode<T>[] children = null;
 
-	private List<Chunk> childObjects = new List<Chunk>();
+	private List<Chunk> chunksInsideNode = new List<Chunk>();
 
 	bool HasChildren { get { return children != null; } }
 
@@ -206,27 +207,26 @@ public class PointOctreeNode<T> {
 		}
 	}
 
-    public void CalculatePointsInsideFrustum(Plane[] planes, int count, Vector3 cameraPosition, ref PriorityQueue<Chunk> toRender, ref PriorityQueue<Chunk> toDelete, ref List<Chunk> currentRendering, ref Bounds[] visibleNodeBounds)
+    public void CalculatePointsInsideFrustum(Plane[] planes, int count, Vector3 cameraPosition, ref SimplePriorityQueue<Chunk> toRender, ref SimplePriorityQueue<Chunk> toDelete, ref List<Chunk> currentRendering, ref Bounds[] visibleNodeBounds)
 	{
 		if (!Util.TestPlanesAABB(planes, bounds)) return;
 		if (count == visibleNodeBounds.Length) return;
 		
-		if (objects.Count  != 0)
+		if (chunksInsideNode.Count  != 0)
 		{
             //foreach (Chunk c in childObjects)
-			for(int i = 0; i < childObjects.Count; i++)
+			for(int i = 0; i < chunksInsideNode.Count; i++)
             {
-				//visibleNodeBounds.Add(childObjects[i].bounds);
-				visibleNodeBounds[count] = childObjects[i].bounds;
-				if (currentRendering.Contains(childObjects[i]))
+				//visibleNodeBounds.Add(chunksInsideNode[i].bounds);
+				visibleNodeBounds[count] = chunksInsideNode[i].bounds;
+				if (currentRendering.Contains(chunksInsideNode[i]))
 				{
-					currentRendering.Remove(childObjects[i]);
-					
+					currentRendering.Remove(chunksInsideNode[i]);
 					continue;
 				}
 
-				childObjects[i].priority =  Vector3.Distance(cameraPosition, childObjects[i].position);
-				toRender.Enqueue(childObjects[i]);
+				float priority =  Vector3.Distance(cameraPosition, chunksInsideNode[i].position);
+				toRender.Enqueue(chunksInsideNode[i], priority);
 
 				count += 1;
 				if (count == visibleNodeBounds.Length) return;
@@ -245,7 +245,7 @@ public class PointOctreeNode<T> {
 		}
 	}
 
-    public void CreateMesh(List<GameObject> result, Transform parent, Material material, int depth, ref int counter)
+    public void CreateMesh(Transform parent, Material material, ref int counter)
 	{
 		// result.AddRange(objects.Select( o => o.Obj));
 
@@ -262,7 +262,7 @@ public class PointOctreeNode<T> {
             {
 
                 Point[] point_cloud_slice = points.Skip(i * MAX_VERTICES).Take(MAX_VERTICES).ToArray();
-                CreateMeshGameObject(point_cloud_slice, parent, material, bounds.center, result, depth, ref counter);
+                CreateMeshGameObject(point_cloud_slice, parent, material, bounds.center, ref counter);
             }
         }
 
@@ -270,15 +270,15 @@ public class PointOctreeNode<T> {
         {
             for (int i = 0; i < 8; i++)
             {
-                children[i].CreateMesh(result, parent, material, depth + 1, ref counter);
+                children[i].CreateMesh(parent, material, ref counter);
             }
         }
 
     }
 
-	private void CreateMeshGameObject(Point[] point_cloud_slice, Transform parent, Material material, Vector3 positionInOctree,List<GameObject> result, int depth, ref int counter)
+	private void CreateMeshGameObject(Point[] point_cloud_slice, Transform parent, Material material, Vector3 positionInOctree, ref int counter)
 	{
-        GameObject go = new GameObject($"PC_Mesh {counter}:{depth}");
+        GameObject go = new GameObject($"PC_Mesh {counter}");
 		go.transform.parent = parent;
         counter += 1;
 
@@ -300,8 +300,7 @@ public class PointOctreeNode<T> {
 		mr.material = material;
 
 		go.SetActive(false);
-		result.Add(go);
-		childObjects.Add(new Chunk(go, positionInOctree, bounds));
+		chunksInsideNode.Add(new Chunk(go, positionInOctree, bounds));
     }
 
 	/// <summary>

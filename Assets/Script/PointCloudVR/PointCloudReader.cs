@@ -22,7 +22,7 @@ namespace PointCloudVR
             List<Vector3> p = new List<Vector3>();
             List<Color> c = new List<Color>();
 
-            string filePath = Path.Combine("D:/VR_Training/PointCloud", fileName);
+            string filePath = Path.Combine("Assets/data/", fileName);
 
             StreamReader inp_stm = new StreamReader(filePath);
            
