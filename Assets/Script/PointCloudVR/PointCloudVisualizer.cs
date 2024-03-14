@@ -2,6 +2,7 @@ using Priority_Queue;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 
@@ -73,25 +74,51 @@ namespace PointCloudVR
             for (; ;)
             {
 
-                if (currentRendering.Count != maxGameObject)
-                {
-                    if (toRender.Count != 0)
+                if (toRender.Count != 0)
+                {                 
+                    if (nowRendering.Count != maxGameObject)
                     {
                         Chunk c = toRender.Dequeue();
                         c.gObj.SetActive(true);
-                        currentRendering.Add(c);
-                    }
+                        float priority = Vector3.Distance(myCamera.transform.position, c.bounds.center);
+                        nowRendering.Enqueue(c, priority);
+                    } else 
+                    {
+                        //Debug.Log($"Now: {nowRendering.GetPriority(nowRendering.Last())} -- TORENDER: {toRender.GetPriority(toRender.First)}");
+                        if (nowRendering.GetPriority(nowRendering.Last()) > toRender.GetPriority(toRender.First))
+                        {
+                            Chunk c = nowRendering.Last();
+                            c.gObj.SetActive(false);
+                            nowRendering.Remove(c);
+                        }
+                                             }
                 }
 
+                yield return null;
 
-                if (toDelete.Count != 0)
-                {
-                    Chunk c = toDelete.Dequeue();
-                    c.gObj.SetActive(false);
-                    currentRendering.Remove(c);
-                }
+                //if (nowRendering.Count != maxGameObject)
+                //{
+                //    if (toRender.Count != 0)
+                //    {
+                //        Chunk c = toRender.Dequeue();
+                //        c.gObj.SetActive(true);
+                //        nowRendering.Enqueue(c, Vector3.Distance(myCamera.transform.position, c.bounds.center));
+                //    }
+                //} else
+                //{
+                          
+                //}
+
+                //// if (nowRendering.Count != 0) Debug.Log($"{nowRendering.First.gObj.name} -- {nowRendering.Last().gObj.name}");
+
+                ////if (toDelete.Count != 0)
+                ////{
+                ////    Chunk c = toDelete.Dequeue();
+                ////    c.gObj.SetActive(false);
+                ////    nowRendering.Remove(c);
+                ////}
                                        
-                yield return new WaitForSeconds(.1f);
+                //yield return new WaitForSeconds(.1f);
 
             }
 
@@ -154,14 +181,15 @@ namespace PointCloudVR
         void Update()
         {
             octreeTraversal.setData(GeometryUtility.CalculateFrustumPlanes(myCamera), myCamera.transform.position);
-            octreeTraversal.setQueues(toRender, toDelete, currentRendering);
+            octreeTraversal.setQueues(toRender, toDelete, nowRendering);
 
             if (lastUpdate != octreeTraversal.GetLastUpdate())
             {
                 (toRender, toDelete, visibleNodeBounds) = octreeTraversal.getData();
             }
 
-            text.text = $"toRender: {toRender.Count} -- toDelete: {toDelete.Count} -- currentRendering: {currentRendering.Count}";
+            text.color = Color.red;
+            text.text = $"toRender: {toRender.Count} -- toDelete: {toDelete.Count} -- nowRendering: {nowRendering.Count}";
         }
 
         private void PrepareMaterial()
@@ -185,14 +213,21 @@ namespace PointCloudVR
 
         private void OnDrawGizmos()
         {
-            if (visibleNodeBounds == null) return;
+            //if (visibleNodeBounds == null) return;
 
-            Gizmos.color = Color.red;
-            for(int i = 0; i < visibleNodeBounds.Length; i++)
+            foreach (var c in nowRendering)
             {
-                if (visibleNodeBounds[i] == null) break;
-                Gizmos.DrawWireCube(visibleNodeBounds[i].center, visibleNodeBounds[i].size);
+                //Debug.Log($"{c.position} -- {nowRendering.GetPriority(c)}");
+                UnityEditor.Handles.color = Color.green;
+                UnityEditor.Handles.Label(c.position, $"{nowRendering.GetPriority(c)}");
             }
+
+            //Gizmos.color = Color.red;
+            //for(int i = 0; i < visibleNodeBounds.Length; i++)
+            //{
+            //    if (visibleNodeBounds[i] == null) break;
+            //    Gizmos.DrawWireCube(visibleNodeBounds[i].center, visibleNodeBounds[i].size);
+            //}
         }
     }
 

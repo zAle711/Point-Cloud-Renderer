@@ -207,30 +207,39 @@ public class PointOctreeNode<T> {
 		}
 	}
 
-    public void CalculatePointsInsideFrustum(Plane[] planes, int count, Vector3 cameraPosition, ref SimplePriorityQueue<Chunk> toRender, ref SimplePriorityQueue<Chunk> toDelete, ref List<Chunk> currentRendering, ref Bounds[] visibleNodeBounds)
+    public void CalculatePointsInsideFrustum(Plane[] planes, int maxObjects, Vector3 cameraPosition, ref SimplePriorityQueue<Chunk> toRender, ref SimplePriorityQueue<Chunk> toDelete, ref SimplePriorityQueue<Chunk> nowRendering, ref Bounds[] visibleNodeBounds)
 	{
-		if (!Util.TestPlanesAABB(planes, bounds)) return;
-		if (count == visibleNodeBounds.Length) return;
+		//if (!Util.TestPlanesAABB(planes, bounds)) return;
+		//if (count == visibleNodeBounds.Length) return;
 		
 		if (chunksInsideNode.Count  != 0)
 		{
-            //foreach (Chunk c in childObjects)
 			for(int i = 0; i < chunksInsideNode.Count; i++)
             {
-				//visibleNodeBounds.Add(chunksInsideNode[i].bounds);
-				visibleNodeBounds[count] = chunksInsideNode[i].bounds;
-				if (currentRendering.Contains(chunksInsideNode[i]))
+				//visibleNodeBounds[count] = chunksInsideNode[i].bounds;
+				float priority =  Vector3.Distance(cameraPosition, chunksInsideNode[i].bounds.center);
+                
+				if (nowRendering.Contains(chunksInsideNode[i]))
 				{
-					currentRendering.Remove(chunksInsideNode[i]);
-					continue;
-				}
+					//nowRendering.Remove(chunksInsideNode[i]);
+					nowRendering.UpdatePriority(chunksInsideNode[i], priority);
+				} else
+				{
+					//if (nowRendering.Count != maxObjects) toRender.Enqueue(chunksInsideNode[i], priority);
+					if (toRender.Contains(chunksInsideNode[i]))
+					{
+						toRender.UpdatePriority(chunksInsideNode[i], priority);
+					} else
+					{
+						toRender.Enqueue(chunksInsideNode[i], priority);
+					}
 
-				float priority =  Vector3.Distance(cameraPosition, chunksInsideNode[i].position);
-				toRender.Enqueue(chunksInsideNode[i], priority);
+                }
 
-				count += 1;
-				if (count == visibleNodeBounds.Length) return;
-			}
+
+                //count += 1;
+                //if (count == visibleNodeBounds.Length) return;
+            }
         } 
 		
 
@@ -238,9 +247,7 @@ public class PointOctreeNode<T> {
 		{
 			for( int i = 0; i < 8; i++)
 			{
-				children[i].CalculatePointsInsideFrustum(planes, count, cameraPosition, ref toRender, ref toDelete, ref currentRendering, ref visibleNodeBounds);
-				
-				// Debug.Log(Vector3.Distance(cameraPosition, Center));
+				children[i].CalculatePointsInsideFrustum(planes, maxObjects, cameraPosition, ref toRender, ref toDelete, ref nowRendering, ref visibleNodeBounds);
 			}
 		}
 	}
@@ -298,9 +305,18 @@ public class PointOctreeNode<T> {
 
         mf.mesh = mesh;
 		mr.material = material;
-
+		
 		go.SetActive(false);
-		chunksInsideNode.Add(new Chunk(go, positionInOctree, bounds));
+
+		Vector3 centroid = Vector3.zero;
+		foreach (Vector3 v in mesh.vertices)
+		{
+			centroid += v;
+		}
+
+		centroid /= mesh.vertices.Length;
+
+		chunksInsideNode.Add(new Chunk(go, centroid, bounds));
     }
 
 	/// <summary>

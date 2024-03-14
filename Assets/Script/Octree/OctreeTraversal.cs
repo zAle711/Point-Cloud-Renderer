@@ -50,13 +50,21 @@ public class OctreeTraversal
         }
     }
 
-    public void setQueues(SimplePriorityQueue<Chunk> toRender, SimplePriorityQueue<Chunk> toDelete, List<Chunk> currentRendering)
+    public void SetQueue(SimplePriorityQueue<Chunk> nowRendering)
+    {
+        lock (traversalParams)
+        {
+            traversalParams.nowRendering = nowRendering;
+        }
+    }
+
+    public void setQueues(SimplePriorityQueue<Chunk> toRender, SimplePriorityQueue<Chunk> toDelete, SimplePriorityQueue<Chunk> nowRendering)
     {
         lock(traversalParams)
         {
             traversalParams.toRender = toRender;
             traversalParams.toDelete = toDelete;
-            traversalParams.currentRendering = currentRendering;
+            traversalParams.nowRendering = nowRendering;
         }
     }
 
@@ -87,6 +95,7 @@ public class OctreeTraversal
         int maxObjToRender;
         SimplePriorityQueue<Chunk> toRender;
         SimplePriorityQueue<Chunk> toDelete;
+        SimplePriorityQueue<Chunk> nowRendering;
         List<Chunk> currentRendering = new List<Chunk>();
 
         while (p.running)
@@ -97,18 +106,20 @@ public class OctreeTraversal
                 frustumPlanes = p.frustumPlanes;
                 cameraPosition = p.cameraPosition;
                 maxObjToRender  = p.maxObjectToRender;
-                //currentRendering = p.currentRendering.Count != 0 ? new List<Chunk>(p.currentRendering) : new List<Chunk>();
-                toRender = p.toRender;
-                toDelete = p.toDelete;
+                ////currentRendering = p.currentRendering.Count != 0 ? new List<Chunk>(p.currentRendering) : new List<Chunk>();
+                //toRender = p.toRender;
+                //toDelete = p.toDelete;
+                nowRendering = p.nowRendering;
             }
-
-            toRender.Clear();
-            toDelete.Clear();
+            toRender = new SimplePriorityQueue<Chunk>();
+            toDelete = new SimplePriorityQueue<Chunk>();
+            //toRender.Clear();
+            //toDelete.Clear();
 
             Bounds[] visibleNodeBounds = new Bounds[maxObjToRender];
 
 
-            octree.CalculatePointsInsideFrustum(frustumPlanes, cameraPosition, 0, ref toRender, ref toDelete, ref currentRendering, ref visibleNodeBounds);
+            octree.CalculatePointsInsideFrustum(frustumPlanes, cameraPosition, maxObjToRender, ref toRender, ref toDelete, ref nowRendering, ref visibleNodeBounds);
 
 
             lock (p)
