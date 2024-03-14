@@ -39,6 +39,8 @@ public class TestQuad : MonoBehaviour
         material = new Material(Shader.Find("Custom/QuadGeoWorldSizeShader"));
 
         //Rect screen = Camera.main.pixelRect;
+        //material.SetInt("_ScreenWidth", (int)screen.width);
+        //material.SetInt("_ScreenHeight", (int)screen.height);
         material.enableInstancing = true;
         material.SetFloat("_PointSize", pointRadius);
         material.SetInt("_Circles", renderCircles ? 1 : 0);

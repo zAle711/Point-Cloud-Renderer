@@ -1,3 +1,6 @@
+using System.Collections;
+using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 namespace PointCloudVR
@@ -10,35 +13,104 @@ namespace PointCloudVR
         public string Point_Cloud_Mesh = "";
         public float Quad_Size = 0.15f;
         public bool invertYZ = false;
-    
+        public TextMeshProUGUI text;
+        public Camera myCamera;
 
-        private PointCloud pc;
-        private PointCloud pcQ;
-
+        //Point Cloud
         private Vector3[] points;
         private Color[] colors;
+        
+        private PointOctree<Point> pointCloudOctree;
+        private Material material;
 
-        public PointCloudRenderer pcRenderer;
+        private OctreeTraversal octreeTraversal;
+
+        private PriorityQueue<Chunk> toRender = new PriorityQueue<Chunk>();
+        private PriorityQueue<Chunk> toDelete = new PriorityQueue<Chunk>();
+        private List<Chunk> currentRendering = new List<Chunk>();
+        private bool empty = true;
+
+        //Mesh
         public GameObject pcMesh;
 
         void Start()
         {
             if (Point_Cloud != "")
             {
+                PrepareMaterial();
                 (points, colors) = PointCloudReader.ReadPCDFile(Point_Cloud, invertYZ);
-                pcRenderer.CreateMeshFromPointCloud(points, colors);
+                CreateOctree();
+                //pcRenderer.CreateMeshFromPointCloud(points, colors);
 
-                Debug.Log($"{points[0]} - {points[12323]}");
+                octreeTraversal = new OctreeTraversal(pointCloudOctree, 100);
+                octreeTraversal.setData(GeometryUtility.CalculateFrustumPlanes(myCamera), myCamera.transform.position);
+                octreeTraversal.Start();
+
+                CreateGameObjects();
+
+                StartCoroutine(RenderChunks());
                 //PointCloudReader.ReadPCDFile(out pc, out pcQ, Point_Cloud, Quad_Size, invertYZ);
                 //pcRenderer.SetData(pc, pcQ);
 
             }
             if (Point_Cloud_Mesh != "")
             {
-                PointCloudReader.ReadPLYFile(out Vector3[] v, out int[] c, out Vector3[] n, out int[] t, Point_Cloud_Mesh, false);
+                PointCloudReader.ReadPLYFile(out Vector3[] v, out int[] c, out Vector3[] n, out int[] t, Point_Cloud_Mesh, invertYZ);
                 CreateMesh(v, c, n, t);
             }
      
+        }
+
+        IEnumerator RenderChunks()
+        {
+            for (; ;)
+            {
+
+                if (toRender.Count != 0)
+                {
+                    Chunk c = toRender.Dequeue();
+                    c.gObj.SetActive(true);
+                    currentRendering.Add(c);
+                }
+
+                if (toDelete.Count != 0)
+                {
+                    Chunk c = toDelete.Dequeue();
+                    c.gObj.SetActive(false);
+                    currentRendering.Remove(c);
+                }
+                                       
+                yield return new WaitForSeconds(.1f);
+
+            }
+
+        }
+
+        private void CreateGameObjects()
+        {
+            GameObject go = new GameObject("PC-Container");
+            go.transform.SetParent(transform.parent);
+            go.transform.position = Vector3.zero;
+
+            pointCloudOctree.CreateMesh(go.transform, material);
+        }
+
+        private void CreateOctree()
+        {
+            Point[] pointCloud = new Point[points.Length];
+
+            for (int i = 0; i < pointCloud.Length; i++)
+            {
+                pointCloud[i] = new Point(points[i], colors[i]);
+            }
+
+            pointCloudOctree = new PointOctree<Point>(5f, Vector3.zero, 5);
+
+            foreach (Point point in pointCloud)
+            {
+                pointCloudOctree.Add(point, point.position);
+            }
+
         }
 
         private void CreateMesh(Vector3[] v, int[] c, Vector3[] n, int[] t)
@@ -70,9 +142,39 @@ namespace PointCloudVR
         // Update is called once per frame
         void Update()
         {
-            
+            octreeTraversal.setData(GeometryUtility.CalculateFrustumPlanes(myCamera), myCamera.transform.position);
+            octreeTraversal.setQueues(toRender, toDelete, currentRendering);
+
+            if (toRender.Count == 0 || toDelete.Count == 0)
+            {
+                (toRender, toDelete) = octreeTraversal.getQueues();
+               
+            }
+
+
+            text.text = $"toRender: {toRender.Count} -- toDelete: {toDelete.Count} -- currentRendering: {currentRendering.Count}";
         }
 
+
+
+        private void PrepareMaterial()
+        {
+            float pointRadius = 2.5f;
+            int renderCircles = 0;
+
+            material = new Material(Shader.Find("Custom/QuadGeoScreenSizeShader"));
+            material.enableInstancing = true;
+            material.SetFloat("_PointSize", pointRadius);
+            material.SetInt("_Circles", renderCircles);
+            Rect screen = Camera.main.pixelRect;
+            material.SetInt("_ScreenWidth", (int)screen.width);
+            material.SetInt("_ScreenHeight", (int)screen.height);
+        }
+
+        private void OnApplicationQuit()
+        {
+            octreeTraversal.Stop();
+        }
     }
 
 }

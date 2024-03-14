@@ -1971,8 +1971,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0df266652de1c2a4e8178a65d8ac651d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Point_Cloud: bagno.pcd
-  Point_Cloud_Mesh: corridoio_v3.ply
+  Point_Cloud: chiesa_converted.pcd
+  Point_Cloud_Mesh: chiesa_medievale.ply
   Quad_Size: 0.025
   invertYZ: 1
   pcRenderer: {fileID: 440491612}
