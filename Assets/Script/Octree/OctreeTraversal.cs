@@ -109,8 +109,6 @@ public class OctreeTraversal
             lock (p)
             {
                 p.toRender = toRender;
-                p.lastUpdate = DateTime.Now;
-
             }
 
         }

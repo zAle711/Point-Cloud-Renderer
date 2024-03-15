@@ -68,36 +68,91 @@ namespace PointCloudVR
 
         IEnumerator RenderChunks()
         {
+            Chunk c;
             for (; ;)
             {
+                //if (nowRendering.Count == maxGameObject)
                 if (toDelete.Count != 0)
                 {
-                    Chunk c = toDelete.Dequeue();
-                    if (nowRendering.TryRemove(c))
-                        c.gObj.SetActive(false);
+                    if (toDelete.TryDequeue(out c))
+                    {
+                        if (nowRendering.TryRemove(c))
+                        {
+                            Debug.Log("pERCHe' NON LO RUIMUOVE DIO PORCO");
+                            c.gObj.SetActive(false);
+                        }
+                    } 
+                }
+                
+                float priority;
+
+                if (toRender.TryFirst(out c) && toRender.TryGetPriority(c, out priority))
+                {
+                    if(toRender.TryRemove(c))
+                    {
+                        if(!nowRendering.TryUpdatePriority(c, priority))
+                        {
+                            c.gObj.SetActive(true);
+                            nowRendering.Enqueue(c, priority);
+                        }
+                    }
+
                 }
 
-                if (toRender.Count != 0)
-                {                 
+                //if (toRender.Count != 0 && nowRendering.Count != maxGameObject)
+                //{
+                //    Chunk c = toRender.First;
+                //    float priority = toRender.GetPriority(c);
+                //    c.gObj.SetActive(true);
+                //    toRender.Remove(c);
+                //    nowRendering.Enqueue(c, priority);
+                //}
 
-                    if (nowRendering.Count != maxGameObject)
-                    {
-                        Chunk c = toRender.Dequeue();
-                        c.gObj.SetActive(true);
-                        float priority = Vector3.Distance(myCamera.transform.position, c.position);
-                        nowRendering.Enqueue(c, priority);
-                    }
-                    else
-                    {
-                        //Chunk last = nowRendering.Last();
-                        //if (nowRendering.GetPriority(last) > toRender.GetPriority(toRender.First))
-                        //{
-                        //    last.gObj.SetActive(false);
-                        //    nowRendering.Remove(last);
-                        //}
+                //if (toDelete.Count != 0)
+                //{
+                //    Chunk c = toDelete.Dequeue();
+                //    if (nowRendering.TryRemove(c))
+                //    {
+                //        Debug.Log("Lo rimuovo");
+                //        c.gObj.SetActive(false);
+                //    }
+                        
+                //}
+                //if (toDelete.Count != 0)
+                //{
+                //    Chunk c = toDelete.Dequeue();
+                //    if (nowRendering.TryRemove(c))
+                //        c.gObj.SetActive(false);
+                //}
 
-                    }
-                }
+                //if (toRender.Count != 0)
+                //{                 
+
+                //    if (nowRendering.Count != maxGameObject)
+                //    {
+                //        float priority;
+                //        if (toRender.TryGetPriority(toRender.First, out priority))
+                //        {
+                //            Chunk c = toRender.Dequeue();
+                //            c.gObj.SetActive(true);
+                //            nowRendering.Enqueue(c, priority);
+                //        }
+                        
+                        
+                //        //float priority = Vector3.Distance(myCamera.transform.position, c.position);
+                        
+                //    }
+                //    else
+                //    {
+                //        //Chunk last = nowRendering.Last();
+                //        //if (nowRendering.GetPriority(last) > toRender.GetPriority(toRender.First))
+                //        //{
+                //        //    last.gObj.SetActive(false);
+                //        //    nowRendering.Remove(last);
+                //        //}
+
+                //    }
+                //}
 
                 yield return null;
 
@@ -221,12 +276,20 @@ namespace PointCloudVR
         {
             //if (visibleNodeBounds == null) return;
 
+            if (nowRendering == null || toDelete == null) return;
+
             foreach (var c in nowRendering)
             {
                 //Debug.Log($"{c.position} -- {nowRendering.GetPriority(c)}");
                 UnityEditor.Handles.color = Color.green;
                 UnityEditor.Handles.Label(c.position, $"{nowRendering.GetPriority(c)}");
 
+                Gizmos.color = Color.green;
+                Gizmos.DrawWireCube(c.position, c.bounds.size);
+            }
+
+            foreach(var c in toDelete)
+            {
                 Gizmos.color = Color.red;
                 Gizmos.DrawWireCube(c.position, c.bounds.size);
             }

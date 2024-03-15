@@ -172,7 +172,7 @@ public class PointOctree<T> {
 	public void CalculatePointsInsideFrustum(Plane[] planes, Vector3 cameraPosition, Vector3 cameraForward, int maxObject, ref SimplePriorityQueue<Chunk> toRender, ref SimplePriorityQueue<Chunk> nowRendering, ref SimplePriorityQueue<Chunk> toDelete)
 	{
 		int frustumObject = 0;
-		rootNode.CalculatePointsInsideFrustum(planes, maxObject, frustumObject, cameraPosition, cameraForward, ref toRender, ref nowRendering, ref toDelete);
+		rootNode.CalculatePointsInsideFrustum(planes, maxObject, ref frustumObject, cameraPosition, cameraForward, ref toRender, ref nowRendering, ref toDelete);
  	}
 	
 
