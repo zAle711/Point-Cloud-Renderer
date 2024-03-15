@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml;
 using TMPro;
 using UnityEngine;
 
@@ -33,19 +34,14 @@ namespace PointCloudVR
 
         private SimplePriorityQueue<Chunk> toRender = new SimplePriorityQueue<Chunk>();
         private SimplePriorityQueue<Chunk> toDelete = new SimplePriorityQueue<Chunk>();
-        private DateTime lastUpdate;
         
         private SimplePriorityQueue<Chunk> nowRendering = new SimplePriorityQueue<Chunk>();
 
-        private List<Chunk> currentRendering = new List<Chunk>();
-        private Bounds[] visibleNodeBounds;
         //Mesh
         public GameObject pcMesh;
 
         void Start()
         {
-            visibleNodeBounds = new Bounds[maxGameObject];
-            lastUpdate = DateTime.Now;
             if (Point_Cloud != "")
             {
                 PrepareMaterial();
@@ -55,7 +51,8 @@ namespace PointCloudVR
                 CreateGameObjects();
 
                 octreeTraversal = new OctreeTraversal(pointCloudOctree, maxGameObject);
-                octreeTraversal.setData(GeometryUtility.CalculateFrustumPlanes(myCamera), myCamera.transform.position);
+                octreeTraversal.SetData(GeometryUtility.CalculateFrustumPlanes(myCamera), myCamera.transform.position, myCamera.transform.forward);
+                octreeTraversal.SetQueues(toRender, toDelete, nowRendering);
                 octreeTraversal.Start();
 
                 StartCoroutine(RenderChunks());
@@ -73,25 +70,33 @@ namespace PointCloudVR
         {
             for (; ;)
             {
+                if (toDelete.Count != 0)
+                {
+                    Chunk c = toDelete.Dequeue();
+                    if (nowRendering.TryRemove(c))
+                        c.gObj.SetActive(false);
+                }
 
                 if (toRender.Count != 0)
                 {                 
+
                     if (nowRendering.Count != maxGameObject)
                     {
                         Chunk c = toRender.Dequeue();
                         c.gObj.SetActive(true);
-                        float priority = Vector3.Distance(myCamera.transform.position, c.bounds.center);
+                        float priority = Vector3.Distance(myCamera.transform.position, c.position);
                         nowRendering.Enqueue(c, priority);
-                    } else 
+                    }
+                    else
                     {
-                        //Debug.Log($"Now: {nowRendering.GetPriority(nowRendering.Last())} -- TORENDER: {toRender.GetPriority(toRender.First)}");
-                        if (nowRendering.GetPriority(nowRendering.Last()) > toRender.GetPriority(toRender.First))
-                        {
-                            Chunk c = nowRendering.Last();
-                            c.gObj.SetActive(false);
-                            nowRendering.Remove(c);
-                        }
-                                             }
+                        //Chunk last = nowRendering.Last();
+                        //if (nowRendering.GetPriority(last) > toRender.GetPriority(toRender.First))
+                        //{
+                        //    last.gObj.SetActive(false);
+                        //    nowRendering.Remove(last);
+                        //}
+
+                    }
                 }
 
                 yield return null;
@@ -180,13 +185,14 @@ namespace PointCloudVR
         // Update is called once per frame
         void Update()
         {
-            octreeTraversal.setData(GeometryUtility.CalculateFrustumPlanes(myCamera), myCamera.transform.position);
-            octreeTraversal.setQueues(toRender, toDelete, nowRendering);
+            //octreeTraversal.setData(GeometryUtility.CalculateFrustumPlanes(myCamera), myCamera.transform.position, myCamera.transform.forward);
+            octreeTraversal.SetData(GeometryUtility.CalculateFrustumPlanes(myCamera), myCamera.transform.position, myCamera.transform.forward);
+            //octreeTraversal.SetQueues(toRender, nowRendering);
 
-            if (lastUpdate != octreeTraversal.GetLastUpdate())
-            {
-                (toRender, toDelete, visibleNodeBounds) = octreeTraversal.getData();
-            }
+            //if (lastUpdate != octreeTraversal.GetLastUpdate())
+            //{
+            //    octreeTraversal.getData();
+            //}
 
             text.color = Color.red;
             text.text = $"toRender: {toRender.Count} -- toDelete: {toDelete.Count} -- nowRendering: {nowRendering.Count}";
@@ -220,6 +226,9 @@ namespace PointCloudVR
                 //Debug.Log($"{c.position} -- {nowRendering.GetPriority(c)}");
                 UnityEditor.Handles.color = Color.green;
                 UnityEditor.Handles.Label(c.position, $"{nowRendering.GetPriority(c)}");
+
+                Gizmos.color = Color.red;
+                Gizmos.DrawWireCube(c.position, c.bounds.size);
             }
 
             //Gizmos.color = Color.red;

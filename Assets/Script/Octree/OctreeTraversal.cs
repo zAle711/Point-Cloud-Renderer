@@ -11,6 +11,7 @@ public class TraversalParams
 
     public Plane[] frustumPlanes;
     public Vector3 cameraPosition;
+    public Vector3 cameraForward;
     
     public SimplePriorityQueue<Chunk> toRender = new SimplePriorityQueue<Chunk>();
     public SimplePriorityQueue<Chunk> toDelete = new SimplePriorityQueue<Chunk>();
@@ -41,26 +42,19 @@ public class OctreeTraversal
 
     }
 
-    public void setData(Plane[] frustumPlanes, Vector3 cameraPosition)
+    public void SetData(Plane[] frustumPlanes, Vector3 cameraPosition, Vector3 cameraForward)
     {
         lock(traversalParams)
         {
            traversalParams.frustumPlanes = frustumPlanes;
            traversalParams.cameraPosition = cameraPosition;
+           traversalParams.cameraForward = cameraForward;
         }
     }
 
-    public void SetQueue(SimplePriorityQueue<Chunk> nowRendering)
+    public void SetQueues(SimplePriorityQueue<Chunk> toRender, SimplePriorityQueue<Chunk> toDelete, SimplePriorityQueue<Chunk> nowRendering)
     {
         lock (traversalParams)
-        {
-            traversalParams.nowRendering = nowRendering;
-        }
-    }
-
-    public void setQueues(SimplePriorityQueue<Chunk> toRender, SimplePriorityQueue<Chunk> toDelete, SimplePriorityQueue<Chunk> nowRendering)
-    {
-        lock(traversalParams)
         {
             traversalParams.toRender = toRender;
             traversalParams.toDelete = toDelete;
@@ -87,16 +81,14 @@ public class OctreeTraversal
     private void ComputeVisiblePoints(object obj)
     {
         TraversalParams p = (TraversalParams)obj;
-        //SimplePriorityQueue<Chunk> toRender = new SimplePriorityQueue<Chunk>();
-        //SimplePriorityQueue<Chunk> toDelete = new SimplePriorityQueue<Chunk>();
 
         Plane[] frustumPlanes;
         Vector3 cameraPosition;
+        Vector3 cameraForward;
         int maxObjToRender;
         SimplePriorityQueue<Chunk> toRender;
         SimplePriorityQueue<Chunk> toDelete;
         SimplePriorityQueue<Chunk> nowRendering;
-        List<Chunk> currentRendering = new List<Chunk>();
 
         while (p.running)
         {
@@ -105,34 +97,21 @@ public class OctreeTraversal
             {
                 frustumPlanes = p.frustumPlanes;
                 cameraPosition = p.cameraPosition;
+                cameraForward = p.cameraForward;
                 maxObjToRender  = p.maxObjectToRender;
-                ////currentRendering = p.currentRendering.Count != 0 ? new List<Chunk>(p.currentRendering) : new List<Chunk>();
-                //toRender = p.toRender;
-                //toDelete = p.toDelete;
+                toRender = p.toRender;
+                toDelete = p.toDelete;
                 nowRendering = p.nowRendering;
             }
-            toRender = new SimplePriorityQueue<Chunk>();
-            toDelete = new SimplePriorityQueue<Chunk>();
-            //toRender.Clear();
-            //toDelete.Clear();
 
-            Bounds[] visibleNodeBounds = new Bounds[maxObjToRender];
-
-
-            octree.CalculatePointsInsideFrustum(frustumPlanes, cameraPosition, maxObjToRender, ref toRender, ref toDelete, ref nowRendering, ref visibleNodeBounds);
-
+            octree.CalculatePointsInsideFrustum(frustumPlanes, cameraPosition, cameraForward, maxObjToRender, ref toRender, ref nowRendering, ref toDelete);
 
             lock (p)
             {
                 p.toRender = toRender;
-                p.toDelete = toDelete;
-                //p.visibleNodesBounds = visibleNodeBounds;
                 p.lastUpdate = DateTime.Now;
 
             }
-
-
-            //Debug.Log($"GameObject visibili: {toRender.Count} -- Camera position:{cameraPosition}");
 
         }
     }

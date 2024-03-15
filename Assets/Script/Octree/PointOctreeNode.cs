@@ -207,7 +207,7 @@ public class PointOctreeNode<T> {
 		}
 	}
 
-    public void CalculatePointsInsideFrustum(Plane[] planes, int maxObjects, Vector3 cameraPosition, ref SimplePriorityQueue<Chunk> toRender, ref SimplePriorityQueue<Chunk> toDelete, ref SimplePriorityQueue<Chunk> nowRendering, ref Bounds[] visibleNodeBounds)
+    public void CalculatePointsInsideFrustum(Plane[] planes, int maxObjects, int frustumObject, Vector3 cameraPosition, Vector3 cameraForward, ref SimplePriorityQueue<Chunk> toRender, ref SimplePriorityQueue<Chunk> nowRendering, ref SimplePriorityQueue<Chunk> toDelete)
 	{
 		//if (!Util.TestPlanesAABB(planes, bounds)) return;
 		//if (count == visibleNodeBounds.Length) return;
@@ -217,24 +217,39 @@ public class PointOctreeNode<T> {
 			for(int i = 0; i < chunksInsideNode.Count; i++)
             {
 				//visibleNodeBounds[count] = chunksInsideNode[i].bounds;
-				float priority =  Vector3.Distance(cameraPosition, chunksInsideNode[i].bounds.center);
-                
-				if (nowRendering.Contains(chunksInsideNode[i]))
-				{
-					//nowRendering.Remove(chunksInsideNode[i]);
-					nowRendering.UpdatePriority(chunksInsideNode[i], priority);
-				} else
-				{
-					//if (nowRendering.Count != maxObjects) toRender.Enqueue(chunksInsideNode[i], priority);
-					if (toRender.Contains(chunksInsideNode[i]))
-					{
-						toRender.UpdatePriority(chunksInsideNode[i], priority);
-					} else
-					{
-						toRender.Enqueue(chunksInsideNode[i], priority);
-					}
+				
+				//Vector3 direction = chunksInsideNode[i].position - cameraPosition;
+				//float angle =  Vector3.Angle(cameraForward, direction);
+				//float distance = direction.magnitude;
 
+				float priority = (chunksInsideNode[i].position - cameraPosition).magnitude;
+                //Nodi vicini alla camera o nel frustum cone devono avere una priorità maggiore.
+ 
+				if (priority <= 2.5f || Util.TestPlanesAABB(planes, chunksInsideNode[i].bounds))
+				{
+					priority = Util.TestPlanesAABB(planes, chunksInsideNode[i].bounds) ?  0.01f * (float) frustumObject : priority;
+
+                    lock (nowRendering) lock (toRender)
+                        {
+							nowRendering.TryUpdatePriority(chunksInsideNode[i], priority);
+                            
+							if (!toRender.TryUpdatePriority(chunksInsideNode[i], priority))
+                                toRender.Enqueue(chunksInsideNode[i], priority);
+                    
+                        }
+                } else 
+				{
+                    lock (nowRendering) lock (toRender) lock (toDelete)
+						{
+                            if (nowRendering.Contains(chunksInsideNode[i]) && !toDelete.Contains(chunksInsideNode[i]))
+                                toDelete.Enqueue(chunksInsideNode[i], 0);
+							else if (toRender.Contains(chunksInsideNode[i]))
+                                toRender.Remove(chunksInsideNode[i]);
+                        }              
                 }
+				
+                
+				
 
 
                 //count += 1;
@@ -247,7 +262,7 @@ public class PointOctreeNode<T> {
 		{
 			for( int i = 0; i < 8; i++)
 			{
-				children[i].CalculatePointsInsideFrustum(planes, maxObjects, cameraPosition, ref toRender, ref toDelete, ref nowRendering, ref visibleNodeBounds);
+				children[i].CalculatePointsInsideFrustum(planes, maxObjects, frustumObject + 1, cameraPosition, cameraForward, ref toRender, ref nowRendering, ref toDelete);
 			}
 		}
 	}
@@ -316,7 +331,7 @@ public class PointOctreeNode<T> {
 
 		centroid /= mesh.vertices.Length;
 
-		chunksInsideNode.Add(new Chunk(go, centroid, bounds));
+		chunksInsideNode.Add(new Chunk(go, centroid, mesh.bounds));
     }
 
 	/// <summary>

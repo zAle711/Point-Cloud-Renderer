@@ -90,6 +90,7 @@ namespace Priority_Queue
             return nodes[0];
         }
 
+        
         /// <summary>
         /// Adds an item to the Node-cache to allow for many methods to be O(1) or O(log n)
         /// </summary>
@@ -221,6 +222,10 @@ namespace Priority_Queue
         /// <param name="item"></param>
         /// <param name="priority"></param>
         /// <returns></returns>
+        /// 
+
+
+
         private SimpleNode EnqueueNoLockOrCache(TItem item, TPriority priority)
         {
             SimpleNode node = new SimpleNode(item);
