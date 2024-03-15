@@ -207,10 +207,8 @@ public class PointOctreeNode<T> {
 		}
 	}
 
-    public void CalculatePointsInsideFrustum(Plane[] planes, int maxObjects, ref int frustumObject, Vector3 cameraPosition, Vector3 cameraForward, ref SimplePriorityQueue<Chunk> toRender, ref SimplePriorityQueue<Chunk> nowRendering, ref SimplePriorityQueue<Chunk> toDelete)
+    public void CalculatePointsInsideFrustum(Plane[] planes, int maxObjects, ref int frustumObject, Vector3 cameraPosition, Vector3 cameraForward, ref SimplePriorityQueue<Chunk> toRender, List<Chunk> nowRendering, ref SimplePriorityQueue<Chunk> toDelete)
 	{
-		//if (!Util.TestPlanesAABB(planes, bounds)) return;
-		//if (count == visibleNodeBounds.Length) return;
 
 		if (chunksInsideNode != null)
         {
@@ -224,7 +222,7 @@ public class PointOctreeNode<T> {
             {
 				toDelete.TryRemove(chunksInsideNode);
 
-				if (!nowRendering.TryUpdatePriority(chunksInsideNode, priority))
+				if (!nowRendering.Contains(chunksInsideNode))
 				{
 					if (!toRender.TryUpdatePriority(chunksInsideNode, priority))
 					{
@@ -233,8 +231,6 @@ public class PointOctreeNode<T> {
 				}
 			} else
             {
-				//Debug.Log("Blocco da rimuovere!");
-				nowRendering.TryUpdatePriority(chunksInsideNode, priority);
 				priority = distance;
 				if (!toRender.TryRemove(chunksInsideNode))
 				{
@@ -242,82 +238,15 @@ public class PointOctreeNode<T> {
 						if (nowRendering.Contains(chunksInsideNode)) toDelete.Enqueue(chunksInsideNode, 1 / priority);
 				}
 			}
-
-			//if (distance <= 5.0f)
-   //         {
-				
-			//} else if (Util.TestPlanesAABB(planes, chunksInsideNode.bounds))
-   //         {
-			//	nowRendering.TryUpdatePriority(chunksInsideNode, 0.01f * frustumObject);
-			//	toRender.TryUpdatePriority(chunksInsideNode, 0.01f * frustumObject);
-			//	frustumObject += 1;
-			//} else
-   //         {
-			//	if(!toRender.TryRemove(chunksInsideNode))
-   //             {
-			//		if (!toDelete.TryUpdatePriority(chunksInsideNode, 1 / distance))
-			//			toDelete.Enqueue(chunksInsideNode, 1 / distance);
-   //             }
-   //         }
 		}
 
-		//if (chunksInsideNode.Count  != 0)
-		//{
-		//	for(int i = 0; i < chunksInsideNode.Count; i++)
-  //          {
-		//		float distance = (chunksInsideNode[i].position - cameraPosition).magnitude;
-
-		//		if (distance <= 2.5f)
-  //              {
-		//			nowRendering.TryUpdatePriority(chunksInsideNode)
-  //              }
-		//		//visibleNodeBounds[count] = chunksInsideNode[i].bounds;
-
-		//		//Vector3 direction = chunksInsideNode[i].position - cameraPosition;
-		//		//float angle =  Vector3.Angle(cameraForward, direction);
-		//		//float distance = direction.magnitude;
-
-		//		float priority = (chunksInsideNode[i].position - cameraPosition).magnitude + i / 10f;
-  //              //Nodi vicini alla camera o nel frustum cone devono avere una priorità maggiore.
- 
-		//		if (priority <= 2.5f || Util.TestPlanesAABB(planes, chunksInsideNode[i].bounds))
-		//		{
-		//			priority = Util.TestPlanesAABB(planes, chunksInsideNode[i].bounds) ?  0.01f *  frustumObject + i / 10f : priority;
-
-		//			if (Util.TestPlanesAABB(planes, chunksInsideNode[i].bounds)) frustumObject += 1;
-
-  //                  lock (nowRendering) lock (toRender)
-  //                      {
-		//					nowRendering.TryUpdatePriority(chunksInsideNode[i], priority);
-                            
-		//					if (!toRender.TryUpdatePriority(chunksInsideNode[i], priority))
-  //                              toRender.Enqueue(chunksInsideNode[i], priority);
-                    
-  //                      }
-  //              } else 
-		//		{
-  //                  lock (nowRendering) lock (toRender) lock (toDelete)
-		//				{
-  //                          if (nowRendering.Contains(chunksInsideNode[i]) && !toDelete.Contains(chunksInsideNode[i]))
-  //                              toDelete.Enqueue(chunksInsideNode[i], 0);
-		//					else if (toRender.Contains(chunksInsideNode[i]))
-  //                              toRender.Remove(chunksInsideNode[i]);
-  //                      }              
-  //              }
-			
-
-
-  //              //count += 1;
-  //              //if (count == visibleNodeBounds.Length) return;
-  //          }
-  //      } 
 		
 
 		if (children != null)
 		{
 			for( int i = 0; i < 8; i++)
 			{
-				children[i].CalculatePointsInsideFrustum(planes, maxObjects, ref frustumObject , cameraPosition, cameraForward, ref toRender, ref nowRendering, ref toDelete);
+				children[i].CalculatePointsInsideFrustum(planes, maxObjects, ref frustumObject , cameraPosition, cameraForward, ref toRender, nowRendering, ref toDelete);
 			}
 		}
 	}

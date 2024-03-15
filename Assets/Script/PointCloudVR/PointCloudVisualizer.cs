@@ -34,8 +34,8 @@ namespace PointCloudVR
 
         private SimplePriorityQueue<Chunk> toRender = new SimplePriorityQueue<Chunk>();
         private SimplePriorityQueue<Chunk> toDelete = new SimplePriorityQueue<Chunk>();
-        
-        private SimplePriorityQueue<Chunk> nowRendering = new SimplePriorityQueue<Chunk>();
+
+        private List<Chunk> nowRendering = new List<Chunk>();
 
         //Mesh
         public GameObject pcMesh;
@@ -76,9 +76,9 @@ namespace PointCloudVR
                 {
                     if (toDelete.TryDequeue(out c))
                     {
-                        if (nowRendering.TryRemove(c))
+                        if (nowRendering.Contains(c))
                         {
-                            Debug.Log("pERCHe' NON LO RUIMUOVE DIO PORCO");
+                            nowRendering.Remove(c);
                             c.gObj.SetActive(false);
                         }
                     } 
@@ -90,10 +90,10 @@ namespace PointCloudVR
                 {
                     if(toRender.TryRemove(c))
                     {
-                        if(!nowRendering.TryUpdatePriority(c, priority))
+                        if(!nowRendering.Contains(c))
                         {
                             c.gObj.SetActive(true);
-                            nowRendering.Enqueue(c, priority);
+                            nowRendering.Add(c);
                         }
                     }
 
@@ -282,7 +282,6 @@ namespace PointCloudVR
             {
                 //Debug.Log($"{c.position} -- {nowRendering.GetPriority(c)}");
                 UnityEditor.Handles.color = Color.green;
-                UnityEditor.Handles.Label(c.position, $"{nowRendering.GetPriority(c)}");
 
                 Gizmos.color = Color.green;
                 Gizmos.DrawWireCube(c.position, c.bounds.size);

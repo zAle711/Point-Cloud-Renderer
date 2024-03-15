@@ -1972,9 +1972,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Point_Cloud: chiesa_medievale.pcd
-  Point_Cloud_Mesh: chiesa_medievale.ply
+  Point_Cloud_Mesh: chiesa_centrata.ply
   Quad_Size: 0.025
   invertYZ: 0
+  maxGameObject: 30
   text: {fileID: 1458919828}
   myCamera: {fileID: 636037014}
   pcMesh: {fileID: 626693894}
@@ -2289,7 +2290,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &626693896
 Transform:
   m_ObjectHideFlags: 0

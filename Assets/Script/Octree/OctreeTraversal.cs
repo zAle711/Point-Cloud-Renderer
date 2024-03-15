@@ -17,7 +17,7 @@ public class TraversalParams
     public SimplePriorityQueue<Chunk> toDelete = new SimplePriorityQueue<Chunk>();
     public List<Chunk> currentRendering = new List<Chunk>();
 
-    public SimplePriorityQueue<Chunk> nowRendering = new SimplePriorityQueue<Chunk>();
+    public List<Chunk> nowRendering = new List<Chunk>();
 
     public DateTime lastUpdate;
     public Bounds[] visibleNodesBounds;
@@ -52,7 +52,7 @@ public class OctreeTraversal
         }
     }
 
-    public void SetQueues(SimplePriorityQueue<Chunk> toRender, SimplePriorityQueue<Chunk> toDelete, SimplePriorityQueue<Chunk> nowRendering)
+    public void SetQueues(SimplePriorityQueue<Chunk> toRender, SimplePriorityQueue<Chunk> toDelete, List<Chunk> nowRendering)
     {
         lock (traversalParams)
         {
@@ -88,7 +88,7 @@ public class OctreeTraversal
         int maxObjToRender;
         SimplePriorityQueue<Chunk> toRender;
         SimplePriorityQueue<Chunk> toDelete;
-        SimplePriorityQueue<Chunk> nowRendering;
+        List<Chunk> nowRendering;
 
         while (p.running)
         {
@@ -104,7 +104,7 @@ public class OctreeTraversal
                 nowRendering = p.nowRendering;
             }
 
-            octree.CalculatePointsInsideFrustum(frustumPlanes, cameraPosition, cameraForward, maxObjToRender, ref toRender, ref nowRendering, ref toDelete);
+            octree.CalculatePointsInsideFrustum(frustumPlanes, cameraPosition, cameraForward, maxObjToRender, ref toRender, nowRendering, ref toDelete);
 
             lock (p)
             {
