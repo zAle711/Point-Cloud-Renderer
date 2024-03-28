@@ -20,6 +20,8 @@ public class ImageSubscriber : MonoBehaviour
     public bool newMessage = false;
     public bool isPanelActive = false;
 
+    public bool debug = true;
+
     public GameObject imagePanel;
     private RawImage img;
     // Start is called before the first frame update
@@ -27,7 +29,7 @@ public class ImageSubscriber : MonoBehaviour
     {
         rosConnection = ROSConnection.GetOrCreateInstance();
         img = imagePanel.GetComponentInChildren<RawImage>();
-       
+        Subscribe();
     }
 
     public void Unsubscribe()
@@ -52,12 +54,17 @@ public class ImageSubscriber : MonoBehaviour
 
     private void OnMessageReceived(ImageMsg msg)
     {
-        Debug.Log("immagine arrivata!");
         
         lastMessage = msg;
         newMessage = true;
 
         img.texture = msg.ToTexture2D();
+
+        if (debug)
+        {
+            RawImage rawImage = GameObject.FindGameObjectWithTag("CameraDebug").GetComponent<RawImage>();
+            rawImage.texture = img.texture;
+        }
 
     }
 

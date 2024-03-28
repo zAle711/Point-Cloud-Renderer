@@ -1,5 +1,3 @@
-using System;
-using TMPro;
 using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
@@ -9,24 +7,43 @@ public class PlayerController : MonoBehaviour
     public float pointRadius = 5.0f;
     public int renderCircles = 1;
     public GameObject MeshTest;
-    
-    private LineRenderer line;
 
-    private Ray ray;
+    //private LineRenderer line;
+
+    //private Ray ray;
+
+    private WayPointPublisher pointPublisher;
 
     private void Start()
     {
-
+        pointPublisher = GameObject.FindGameObjectWithTag("PointPublisher").GetComponent<WayPointPublisher>();
     }
     // Update is called once per frame
     void Update()
     {
+        Debug.DrawRay(transform.position, transform.forward, Color.green);
         HandleMovement();
         InputHandler();
     }
 
     private void InputHandler()
     {
+        if(Input.GetKeyDown(KeyCode.Mouse0))
+        {
+            Ray ray = new Ray(transform.position, transform.forward);
+            RaycastHit hitData;
+
+            if (Physics.Raycast(ray, out hitData, 10f))
+            {
+                
+                //Vector3 point = new Vector3(hitData.point.x, hitData.point.z, hitData.point.y);
+                pointPublisher.setDestination(hitData.point);
+                pointPublisher.SendWaypoint();
+                Debug.Log(hitData.point);
+            }
+           
+        }
+
         if (Input.GetKeyDown(KeyCode.P))
         {
             MeshTest.SetActive(!MeshTest.activeSelf);
@@ -64,7 +81,3 @@ public class PlayerController : MonoBehaviour
         transform.eulerAngles += new Vector3(-mouseY * sensitivity, mouseX * sensitivity, 0);
     }
 }
-
-// progettazione e sviluppo di un ambiente in realtà virtuale per applicazioni di robotica immersiva
-// Application virutal in robotica
-//-> tecniche computer graphics per realtà virtuale (ricostruzione mesh partendo da punti, filtraggio e rendering punti )

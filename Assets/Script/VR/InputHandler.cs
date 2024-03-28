@@ -55,7 +55,7 @@ public class InputHandler : MonoBehaviour
             
         }
         
-        if (OVRInput.GetDown(OVRInput.Button.Three))
+        if (OVRInput.GetDown(OVRInput.Button.Three) && false)
         {
             if (!cameraUI.activeSelf)
             {

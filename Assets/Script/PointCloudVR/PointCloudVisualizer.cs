@@ -71,7 +71,6 @@ namespace PointCloudVR
             Chunk c;
             for (; ;)
             {
-                //if (nowRendering.Count == maxGameObject)
                 if (toDelete.Count != 0)
                 {
                     if (toDelete.TryDequeue(out c))
@@ -81,12 +80,10 @@ namespace PointCloudVR
                             nowRendering.Remove(c);
                             c.gObj.SetActive(false);
                         }
-                    } 
+                    }
                 }
-                
-                float priority;
 
-                if (toRender.TryFirst(out c) && toRender.TryGetPriority(c, out priority))
+                if (toRender.TryFirst(out c) && nowRendering.Count != maxGameObject)
                 {
                     if(toRender.TryRemove(c))
                     {
@@ -99,86 +96,7 @@ namespace PointCloudVR
 
                 }
 
-                //if (toRender.Count != 0 && nowRendering.Count != maxGameObject)
-                //{
-                //    Chunk c = toRender.First;
-                //    float priority = toRender.GetPriority(c);
-                //    c.gObj.SetActive(true);
-                //    toRender.Remove(c);
-                //    nowRendering.Enqueue(c, priority);
-                //}
-
-                //if (toDelete.Count != 0)
-                //{
-                //    Chunk c = toDelete.Dequeue();
-                //    if (nowRendering.TryRemove(c))
-                //    {
-                //        Debug.Log("Lo rimuovo");
-                //        c.gObj.SetActive(false);
-                //    }
-                        
-                //}
-                //if (toDelete.Count != 0)
-                //{
-                //    Chunk c = toDelete.Dequeue();
-                //    if (nowRendering.TryRemove(c))
-                //        c.gObj.SetActive(false);
-                //}
-
-                //if (toRender.Count != 0)
-                //{                 
-
-                //    if (nowRendering.Count != maxGameObject)
-                //    {
-                //        float priority;
-                //        if (toRender.TryGetPriority(toRender.First, out priority))
-                //        {
-                //            Chunk c = toRender.Dequeue();
-                //            c.gObj.SetActive(true);
-                //            nowRendering.Enqueue(c, priority);
-                //        }
-                        
-                        
-                //        //float priority = Vector3.Distance(myCamera.transform.position, c.position);
-                        
-                //    }
-                //    else
-                //    {
-                //        //Chunk last = nowRendering.Last();
-                //        //if (nowRendering.GetPriority(last) > toRender.GetPriority(toRender.First))
-                //        //{
-                //        //    last.gObj.SetActive(false);
-                //        //    nowRendering.Remove(last);
-                //        //}
-
-                //    }
-                //}
-
                 yield return null;
-
-                //if (nowRendering.Count != maxGameObject)
-                //{
-                //    if (toRender.Count != 0)
-                //    {
-                //        Chunk c = toRender.Dequeue();
-                //        c.gObj.SetActive(true);
-                //        nowRendering.Enqueue(c, Vector3.Distance(myCamera.transform.position, c.bounds.center));
-                //    }
-                //} else
-                //{
-                          
-                //}
-
-                //// if (nowRendering.Count != 0) Debug.Log($"{nowRendering.First.gObj.name} -- {nowRendering.Last().gObj.name}");
-
-                ////if (toDelete.Count != 0)
-                ////{
-                ////    Chunk c = toDelete.Dequeue();
-                ////    c.gObj.SetActive(false);
-                ////    nowRendering.Remove(c);
-                ////}
-                                       
-                //yield return new WaitForSeconds(.1f);
 
             }
 
@@ -236,18 +154,12 @@ namespace PointCloudVR
 
             mc.sharedMesh = mesh;
         }
-
+           
         // Update is called once per frame
         void Update()
         {
-            //octreeTraversal.setData(GeometryUtility.CalculateFrustumPlanes(myCamera), myCamera.transform.position, myCamera.transform.forward);
-            octreeTraversal.SetData(GeometryUtility.CalculateFrustumPlanes(myCamera), myCamera.transform.position, myCamera.transform.forward);
-            //octreeTraversal.SetQueues(toRender, nowRendering);
-
-            //if (lastUpdate != octreeTraversal.GetLastUpdate())
-            //{
-            //    octreeTraversal.getData();
-            //}
+            if (Point_Cloud != "")
+                octreeTraversal.SetData(GeometryUtility.CalculateFrustumPlanes(myCamera), myCamera.transform.position, myCamera.transform.forward);
 
             text.color = Color.red;
             text.text = $"toRender: {toRender.Count} -- toDelete: {toDelete.Count} -- nowRendering: {nowRendering.Count}";
@@ -274,8 +186,6 @@ namespace PointCloudVR
 
         private void OnDrawGizmos()
         {
-            //if (visibleNodeBounds == null) return;
-
             if (nowRendering == null || toDelete == null) return;
 
             foreach (var c in nowRendering)
@@ -285,6 +195,7 @@ namespace PointCloudVR
 
                 Gizmos.color = Color.green;
                 Gizmos.DrawWireCube(c.position, c.bounds.size);
+                UnityEditor.Handles.color = Color.white;
             }
 
             foreach(var c in toDelete)
@@ -292,13 +203,6 @@ namespace PointCloudVR
                 Gizmos.color = Color.red;
                 Gizmos.DrawWireCube(c.position, c.bounds.size);
             }
-
-            //Gizmos.color = Color.red;
-            //for(int i = 0; i < visibleNodeBounds.Length; i++)
-            //{
-            //    if (visibleNodeBounds[i] == null) break;
-            //    Gizmos.DrawWireCube(visibleNodeBounds[i].center, visibleNodeBounds[i].size);
-            //}
         }
     }
 
